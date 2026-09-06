@@ -2,7 +2,7 @@ name: Weekly Progress Report Auto-Commit
 
 on:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '29 18 * * 4'
 
   workflow_dispatch:
 
