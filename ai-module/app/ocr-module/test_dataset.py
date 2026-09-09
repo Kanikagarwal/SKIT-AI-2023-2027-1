@@ -1,18 +1,25 @@
 from datasets import load_dataset
 
-print("Loading IAM-line dataset...")
 
-ds = load_dataset("Teklia/IAM-line")
+def load_iam_dataset():
+   
+    dataset = load_dataset("Teklia/IAM-line")
 
-print("\nDataset:")
-print(ds)
+    return dataset
 
-print("\nColumns:")
-print(ds["train"].column_names)
 
-print("\nFirst sample:")
-sample = ds["train"][0]
+if __name__ == "__main__":
+    ds = load_iam_dataset()
 
-print("Text:", sample["text"])
-print("Image:", sample["image"])
-print("Image size:", sample["image"].size)
+    print("Dataset loaded successfully!")
+    print(ds)
+
+    print("\nTrain samples:", len(ds["train"]))
+    print("Validation samples:", len(ds["validation"]))
+    print("Test samples:", len(ds["test"]))
+
+    sample = ds["train"][0]
+
+    print("\nSample:")
+    print("Text:", sample["text"])
+    print("Image size:", sample["image"].size)
