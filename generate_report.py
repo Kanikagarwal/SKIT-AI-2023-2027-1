@@ -25,18 +25,14 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 # -------------------------------------------------------------
 # CONFIGURATION: Institution & Department Details
 # -------------------------------------------------------------
-
 COLLEGE_NAME = (
-    "Swami Keshvanand Institute of Technology, Management & Gramothan, Jaipur"
+    "Swami Keshvanand Institute of Technology,Management & Gramothan, Jaipur"
 )
 
 DEPARTMENT_NAME = "Department of Computer Science & Engineering"
 
 
 # -------------------------------------------------------------
-# GET REPOSITORY INFORMATION
-# -------------------------------------------------------------
-
 def get_repo_info():
     """Extracts the exact repository name and branch reliably in GitHub Codespaces."""
 
@@ -79,10 +75,6 @@ def get_repo_info():
     return repo_name, branch_name
 
 
-# -------------------------------------------------------------
-# GIT METRICS
-# -------------------------------------------------------------
-
 def get_git_metrics(interval="weekly"):
     """
     Parses Git commit logs.
@@ -110,6 +102,7 @@ def get_git_metrics(interval="weekly"):
         ).strftime("%Y-%m-%d")
 
         git_args.append(f"--since={since_date}")
+
         scope_title = f"Last 7 Days (Since {since_date})"
 
     elif interval == "monthly":
@@ -118,6 +111,7 @@ def get_git_metrics(interval="weekly"):
         ).strftime("%Y-%m-%d")
 
         git_args.append(f"--since={since_date}")
+
         scope_title = f"Last 30 Days (Since {since_date})"
 
     else:
@@ -154,18 +148,12 @@ def get_git_metrics(interval="weekly"):
     current_date_str = None
 
     for line in raw_output.strip().split("\n"):
-
         line = line.strip()
 
         if not line:
             continue
 
-        # -----------------------------------------------------
-        # COMMIT LINE
-        # -----------------------------------------------------
-
         if line.startswith("COMMIT|||"):
-
             parts = line.split("|||")
 
             if len(parts) >= 5:
@@ -173,14 +161,10 @@ def get_git_metrics(interval="weekly"):
                 author = parts[2].strip()
                 date_str = parts[3].strip()
                 msg = parts[4].strip()
-
             else:
                 continue
 
-            # -------------------------------------------------
-            # IGNORE AUTOMATED BOTS
-            # -------------------------------------------------
-
+            # --- IGNORE AUTOMATED BOTS ---
             if (
                 "bot" in author.lower()
                 or "github-actions" in author.lower()
@@ -188,24 +172,17 @@ def get_git_metrics(interval="weekly"):
                 current_author = None
                 continue
 
-            # -------------------------------------------------
+            # -----------------------------
 
             current_author = author
             current_date_str = date_str
 
             students[current_author]["commits"] += 1
-
-            students[current_author]["active_days"].add(
-                current_date_str
-            )
+            students[current_author]["active_days"].add(current_date_str)
 
             student_logs[current_author].append(
                 (date_str, sha, msg)
             )
-
-            # -------------------------------------------------
-            # TIMELINE ACTIVITY
-            # -------------------------------------------------
 
             try:
                 dt = datetime.datetime.strptime(
@@ -230,12 +207,7 @@ def get_git_metrics(interval="weekly"):
             except Exception:
                 pass
 
-        # -----------------------------------------------------
-        # NUMSTAT LINE
-        # -----------------------------------------------------
-
         elif current_author and not line.startswith("COMMIT|||"):
-
             parts = line.split()
 
             if (
@@ -254,10 +226,6 @@ def get_git_metrics(interval="weekly"):
     )
 
 
-# -------------------------------------------------------------
-# CREATE CHARTS
-# -------------------------------------------------------------
-
 def create_charts(students, timeline_activity, interval):
     """Generates visual workload and trend charts."""
 
@@ -270,14 +238,9 @@ def create_charts(students, timeline_activity, interval):
     authors = list(students.keys())
     periods = sorted(timeline_activity.keys())
 
-    # ---------------------------------------------------------
     # 1. Timeline Line Chart
-    # ---------------------------------------------------------
-
     if periods and authors:
-
         for author in authors:
-
             counts = [
                 timeline_activity[p].get(author, 0)
                 for p in periods
@@ -309,7 +272,6 @@ def create_charts(students, timeline_activity, interval):
         ax1.legend(fontsize=8)
 
     else:
-
         ax1.text(
             0.5,
             0.5,
@@ -318,12 +280,8 @@ def create_charts(students, timeline_activity, interval):
             va="center",
         )
 
-    # ---------------------------------------------------------
     # 2. Net LOC Bar Chart
-    # ---------------------------------------------------------
-
     if authors:
-
         net_loc = [
             students[a]["added"] - students[a]["deleted"]
             for a in authors
@@ -359,7 +317,6 @@ def create_charts(students, timeline_activity, interval):
         )
 
     else:
-
         ax2.text(
             0.5,
             0.5,
@@ -367,8 +324,6 @@ def create_charts(students, timeline_activity, interval):
             ha="center",
             va="center",
         )
-
-    # ---------------------------------------------------------
 
     plt.tight_layout()
 
@@ -391,12 +346,7 @@ def create_charts(students, timeline_activity, interval):
     )
 
 
-# -------------------------------------------------------------
-# GENERATE PDF
-# -------------------------------------------------------------
-
 def generate_pdf(interval="weekly"):
-
     repo_name, branch_name = get_repo_info()
 
     (
@@ -409,43 +359,30 @@ def generate_pdf(interval="weekly"):
     if students is None:
         return
 
-    date_stamp = datetime.date.today().strftime(
-        "%Y-%m-%d"
-    )
-
-    # ---------------------------------------------------------
-    # REPORT TYPE
-    # ---------------------------------------------------------
+    date_stamp = datetime.date.today().strftime("%Y-%m-%d")
 
     if interval == "weekly":
-
         report_title = "Weekly Progress Report (Form-3)"
 
         doc_name = (
-            f"{repo_name}_Weekly_Progress_Report_Form-3_"
-            f"{date_stamp}.pdf"
+            f"{repo_name}_Weekly_Progress_Report_"
+            f"Form-3_{date_stamp}.pdf"
         )
 
     elif interval == "monthly":
-
         report_title = "Monthly Progress Report (Form-3)"
 
         doc_name = (
-            f"{repo_name}_Monthly_Progress_Report_Form-3_"
-            f"{date_stamp}.pdf"
+            f"{repo_name}_Monthly_Progress_Report_"
+            f"Form-3_{date_stamp}.pdf"
         )
 
     else:
-
         report_title = "Final Project Evaluation Report"
 
         doc_name = (
             f"{repo_name}_Final_Report_{date_stamp}.pdf"
         )
-
-    # ---------------------------------------------------------
-    # PDF DOCUMENT
-    # ---------------------------------------------------------
 
     doc = SimpleDocTemplate(
         doc_name,
@@ -457,10 +394,6 @@ def generate_pdf(interval="weekly"):
     )
 
     styles = getSampleStyleSheet()
-
-    # ---------------------------------------------------------
-    # STYLES
-    # ---------------------------------------------------------
 
     college_style = ParagraphStyle(
         "CollegeStyle",
@@ -564,14 +497,10 @@ def generate_pdf(interval="weekly"):
         alignment=0,
     )
 
-    # ---------------------------------------------------------
-    # STORY
-    # ---------------------------------------------------------
-
     story = []
 
     # ---------------------------------------------------------
-    # 1. HEADER
+    # 1. Header with College & Department Name and Form-3 Title
     # ---------------------------------------------------------
 
     story.append(
@@ -595,12 +524,10 @@ def generate_pdf(interval="weekly"):
         )
     )
 
-    story.append(
-        Spacer(1, 3)
-    )
+    story.append(Spacer(1, 3))
 
     # ---------------------------------------------------------
-    # 2. METADATA
+    # 2. Metadata
     # ---------------------------------------------------------
 
     story.append(
@@ -608,8 +535,7 @@ def generate_pdf(interval="weekly"):
             f"<b>Project Repository:</b> "
             f"<font color='#2563EB'><b>"
             f"{html.escape(repo_name)}"
-            f"</b></font> "
-            f"&nbsp;|&nbsp; "
+            f"</b></font> &nbsp;|&nbsp; "
             f"<b>Branch:</b> "
             f"<code>{html.escape(branch_name)}</code>",
             repo_style,
@@ -618,8 +544,7 @@ def generate_pdf(interval="weekly"):
 
     story.append(
         Paragraph(
-            f"<b>Evaluation Window:</b> "
-            f"{scope_title} "
+            f"<b>Evaluation Window:</b> {scope_title} "
             f"&nbsp;|&nbsp; "
             f"<b>Generated On:</b> "
             f"{datetime.date.today().strftime('%B %d, %Y')}",
@@ -628,7 +553,7 @@ def generate_pdf(interval="weekly"):
     )
 
     # ---------------------------------------------------------
-    # 3. INDIVIDUAL SUMMARY TABLE
+    # 3. Individual Summary Table
     # ---------------------------------------------------------
 
     story.append(
@@ -655,21 +580,14 @@ def generate_pdf(interval="weekly"):
     ]
 
     if students:
-
         for name, data in students.items():
-
             pct = (
-                data["commits"]
-                / total_commits
-                * 100
+                data["commits"] / total_commits * 100
                 if total_commits > 0
                 else 0
             )
 
-            net = (
-                data["added"]
-                - data["deleted"]
-            )
+            net = data["added"] - data["deleted"]
 
             table_data.append(
                 [
@@ -683,7 +601,6 @@ def generate_pdf(interval="weekly"):
             )
 
     else:
-
         table_data.append(
             [
                 "No commits found in this period. "
@@ -698,14 +615,7 @@ def generate_pdf(interval="weekly"):
 
     table = Table(
         table_data,
-        colWidths=[
-            120,
-            80,
-            80,
-            80,
-            80,
-            100,
-        ],
+        colWidths=[120, 80, 80, 80, 80, 100],
     )
 
     table.setStyle(
@@ -780,18 +690,15 @@ def generate_pdf(interval="weekly"):
     )
 
     story.append(table)
-
-    story.append(
-        Spacer(1, 6)
-    )
+    story.append(Spacer(1, 6))
 
     # ---------------------------------------------------------
-    # 4. VISUAL CHARTS
+    # 4. Visual Charts
     # ---------------------------------------------------------
 
     story.append(
         Paragraph(
-            "2. Visual Trends &amp; Volume",
+            "2. Visual Trends & Volume",
             section_style,
         )
     )
@@ -803,25 +710,22 @@ def generate_pdf(interval="weekly"):
     )
 
     story.append(chart_image)
-
-    story.append(
-        Spacer(1, 6)
-    )
+    story.append(Spacer(1, 6))
 
     # ---------------------------------------------------------
-    # 5. DETAILED COMMIT LOGS
+    # 5. Detailed Commit Logs per Student
+    #    WITH Vertically Merged Mentor Marks
     # ---------------------------------------------------------
 
     story.append(
         Paragraph(
-            f"3. Detailed Commit Logs &amp; Mentor Evaluation "
+            f"3. Detailed Commit Logs & Mentor Evaluation "
             f"({interval.capitalize()})",
             section_style,
         )
     )
 
     if not student_logs:
-
         story.append(
             Paragraph(
                 "<i>No commit logs found for this timeframe.</i>",
@@ -830,16 +734,14 @@ def generate_pdf(interval="weekly"):
         )
 
     else:
-
         for student_name, logs in student_logs.items():
-
             student_section = []
 
             student_section.append(
                 Paragraph(
                     f"<b>Student:</b> "
-                    f"{html.escape(student_name)} "
-                    f"— <i>{len(logs)} commit(s)</i>",
+                    f"{html.escape(student_name)} — "
+                    f"<i>{len(logs)} commit(s)</i>",
                     sub_section_style,
                 )
             )
@@ -853,10 +755,7 @@ def generate_pdf(interval="weekly"):
                 ]
             ]
 
-            # -------------------------------------------------
-            # FIRST ROW
-            # -------------------------------------------------
-
+            # Place the clean marking line in the first row
             first_date, first_sha, first_msg = logs[0]
 
             safe_msg = (
@@ -886,12 +785,9 @@ def generate_pdf(interval="weekly"):
                 ]
             )
 
-            # -------------------------------------------------
-            # SUBSEQUENT COMMIT ROWS
-            # -------------------------------------------------
-
+            # Subsequent commit rows have blank placeholder
+            # for merged cell
             for date_val, sha_val, msg_val in logs[1:]:
-
                 safe_msg = (
                     html.escape(msg_val)
                     if msg_val
@@ -920,12 +816,7 @@ def generate_pdf(interval="weekly"):
 
             log_table = Table(
                 log_table_data,
-                colWidths=[
-                    65,
-                    50,
-                    335,
-                    90,
-                ],
+                colWidths=[65, 50, 335, 90],
             )
 
             t_style = [
@@ -1017,22 +908,17 @@ def generate_pdf(interval="weekly"):
             )
 
             student_section.append(log_table)
-
-            student_section.append(
-                Spacer(1, 5)
-            )
+            student_section.append(Spacer(1, 5))
 
             story.append(
                 KeepTogether(student_section)
             )
 
     # ---------------------------------------------------------
-    # 6. SYMMETRICAL SIGNATURES
+    # 6. Symmetrical Signatures
     # ---------------------------------------------------------
 
-    story.append(
-        Spacer(1, 16)
-    )
+    story.append(Spacer(1, 16))
 
     mentor_cell = [
         Paragraph(
@@ -1067,12 +953,7 @@ def generate_pdf(interval="weekly"):
     ]
 
     sig_table = Table(
-        [
-            [
-                mentor_cell,
-                coordinator_cell,
-            ]
-        ],
+        [[mentor_cell, coordinator_cell]],
         colWidths=[270, 270],
     )
 
@@ -1124,7 +1005,7 @@ def generate_pdf(interval="weekly"):
     )
 
     # ---------------------------------------------------------
-    # BUILD PDF
+    # Build PDF
     # ---------------------------------------------------------
 
     doc.build(story)
@@ -1140,11 +1021,10 @@ def generate_pdf(interval="weekly"):
 
 
 # -------------------------------------------------------------
-# MAIN
+# Main
 # -------------------------------------------------------------
 
 if __name__ == "__main__":
-
     chosen_interval = (
         sys.argv[1].lower()
         if len(sys.argv) > 1
