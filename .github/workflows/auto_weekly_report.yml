@@ -3,7 +3,7 @@ name: Weekly Progress Report Auto-Commit
 on:
   schedule:
     # Every Thursday at 11:59 PM IST = 18:29 UTC
-    - cron: '29 18 * * 4'
+    - cron: "29 18 * * 4"
 
   # Allows manual trigger from Actions tab
   workflow_dispatch:
@@ -25,15 +25,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install PDF & Graph Dependencies
-        run: |
-          pip install reportlab matplotlib
+        run: pip install reportlab matplotlib
 
       - name: Generate Weekly PDF Report
-        run: |
-          python generate_report.py weekly
+        run: python generate_report.py weekly
 
       - name: Move PDF to Weekly Reports Directory & Commit to Repository
         run: |
