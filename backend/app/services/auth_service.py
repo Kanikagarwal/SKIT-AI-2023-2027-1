@@ -48,5 +48,4 @@ def login_user(
         "sub": str(user.id),
         "role": user.role.value
     })
-
     return user, token
