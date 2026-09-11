@@ -1,57 +1,102 @@
 import { Link } from "react-router-dom"
+
 function Register() {
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-4">
+      <div className="w-full max-w-md">
 
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">
-            Create Account
+        <div className="text-center mb-3">
+          <div className="inline-flex items-center justify-center w-9 h-9 rounded-lg bg-blue-600 text-white text-base font-bold mb-1">
+            E
+          </div>
+
+          <h1 className="text-xl font-bold text-slate-900">
+            Create your account
           </h1>
-          <p className="text-slate-500 mt-2">
-            Create your Theory Evaluation account
+
+          <p className="text-xs text-slate-500 mt-1">
+            Get started with EvalAI
           </p>
         </div>
 
-        <div className="space-y-4">
-          <input
-            type="text"
-            placeholder="Full name"
-            className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-          />
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+          <div className="space-y-3">
 
-          <select
-  className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-  defaultValue=""
->
-  <option value="" disabled>
-    Select role
-  </option>
-  <option value="teacher">Teacher</option>
-  <option value="student">Student</option>
-</select>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Full name
+              </label>
 
-          <input
-            type="email"
-            placeholder="Email address"
-            className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-          />
+              <input
+                type="text"
+                placeholder="Enter your full name"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
 
-          <input
-            type="password"
-            placeholder="Create password"
-            className="w-full border border-slate-300 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
-          />
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Email address
+              </label>
 
-          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl font-semibold transition">
-            Create Account
-          </button>
-          <div className="text-center mt-5 text-sm">
-  <Link to="/" className="text-blue-600 hover:underline">
-    Back to Login
-  </Link>
-</div>
+              <input
+                type="email"
+                placeholder="you@example.com"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Account type
+              </label>
+
+              <select
+                defaultValue=""
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              >
+                <option value="" disabled>
+                  Select your role
+                </option>
+                <option value="teacher">Teacher</option>
+                <option value="student">Student</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Password
+              </label>
+
+              <input
+                type="password"
+                placeholder="Create a password"
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              />
+            </div>
+
+            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition">
+              Create account
+            </button>
+
+          </div>
+
+          <div className="border-t border-slate-200 mt-4 pt-3">
+            <p className="text-center text-xs text-slate-500">
+              Already have an account?{" "}
+              <Link
+                to="/"
+                className="font-semibold text-blue-600 hover:text-blue-700"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
+
+        <p className="text-center text-[11px] text-slate-400 mt-2">
+          AI-powered theory answer evaluation
+        </p>
 
       </div>
     </div>
