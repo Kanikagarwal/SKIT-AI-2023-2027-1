@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 function Login() {
   const [email, setEmail] = useState("")
@@ -7,6 +7,8 @@ function Login() {
   const [role, setRole] = useState("")
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+
+  const navigate = useNavigate()
 
   const handleLogin = (e) => {
     e.preventDefault()
@@ -22,7 +24,12 @@ function Login() {
     }
 
     setError("")
-    alert("Login details are valid.")
+
+    if (role === "teacher") {
+      navigate("/teacher-dashboard")
+    } else {
+      alert("Student dashboard will be available soon.")
+    }
   }
 
   return (
