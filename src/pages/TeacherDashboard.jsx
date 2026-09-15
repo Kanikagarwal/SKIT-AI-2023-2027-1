@@ -1,93 +1,10 @@
-import { useState } from "react"
 import { Link } from "react-router-dom"
 
 function TeacherDashboard() {
-  const [activeItem, setActiveItem] = useState("Dashboard")
-
-const menuItems = [
-  { name: "Dashboard", path: "/teacher-dashboard" },
-  { name: "Evaluations", path: "/evaluations" },
-  { name: "Answer Sheets", path: "/answer-sheets" },
-  { name: "Rubrics", path: "/rubrics" },
-  { name: "Students", path: "#" },
-]
-
   return (
-    <div className="h-screen bg-slate-50 flex overflow-hidden">
+    <div className="min-h-screen bg-slate-50">
 
-      <aside className="w-60 bg-white border-r border-slate-200 flex flex-col">
-
-        <div className="h-16 px-5 flex items-center border-b border-slate-200">
-          <div className="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold">
-            E
-          </div>
-
-          <div className="ml-3">
-            <p className="text-sm font-bold text-slate-900">
-              EvalAI
-            </p>
-
-            <p className="text-[10px] text-slate-400">
-              Teacher Portal
-            </p>
-          </div>
-        </div>
-
-        <nav className="flex-1 px-3 py-5">
-
-          <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider px-3 mb-2">
-            Workspace
-          </p>
-
-          <div className="space-y-1">
-
-            {menuItems.map((item) =>
-              item.path === "#" ? (
-                <button
-                  key={item.name}
-                  onClick={() => setActiveItem(item.name)}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    activeItem === item.name
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {item.name}
-                </button>
-              ) : (
-                <Link
-                  key={item.name}
-                  to={item.path}
-                  onClick={() => setActiveItem(item.name)}
-                  className={`block px-3 py-2 rounded-lg text-sm font-medium transition ${
-                    activeItem === item.name
-                      ? "bg-blue-50 text-blue-600"
-                      : "text-slate-600 hover:bg-slate-50"
-                  }`}
-                >
-                  {item.name}
-                </Link>
-              )
-            )}
-
-          </div>
-
-        </nav>
-
-        <div className="px-3 py-4 border-t border-slate-200">
-
-          <Link
-            to="/"
-            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50"
-          >
-            Sign out
-          </Link>
-
-        </div>
-
-      </aside>
-
-      <main className="flex-1 overflow-hidden">
+      <main className="min-h-screen overflow-hidden">
 
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-7">
 
