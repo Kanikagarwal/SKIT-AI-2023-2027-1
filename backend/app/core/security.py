@@ -1,54 +1,47 @@
-# from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone
 
-# from jose import jwt
-# from passlib.context import CryptContext
+from jose import jwt
+from passlib.context import CryptContext
 
-# from app.core.config import settings
-
-
-# # Password hashing
-# pwd_context = CryptContext(
-#     schemes=["bcrypt"],
-#     deprecated="auto"
-# )
+from app.core.config import settings
 
 
-# def hash_password(password: str) -> str:
-#     """
-#     Hash a plain-text password before storing it.
-#     """
-#     return pwd_context.hash(password)
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto"
+)
 
 
-# def verify_password(
-#     plain_password: str,
-#     hashed_password: str
-# ) -> bool:
-#     """
-#     Verify a plain-text password against its hashed version.
-#     """
-#     return pwd_context.verify(
-#         plain_password,
-#         hashed_password
-#     )
+def hash_password(password: str) -> str:
+    """Hash a plain-text password."""
+    return pwd_context.hash(password)
 
 
-# def create_access_token(data: dict) -> str:
-#     """
-#     Create a JWT access token.
-#     """
-#     to_encode = data.copy()
+def verify_password(
+    plain_password: str,
+    hashed_password: str
+) -> bool:
+    """Verify a plain-text password against its hash."""
+    return pwd_context.verify(
+        plain_password,
+        hashed_password
+    )
 
-#     expire = datetime.now(timezone.utc) + timedelta(
-#         minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
-#     )
 
-#     to_encode.update({
-#         "exp": expire
-#     })
+def create_access_token(data: dict) -> str:
+    """Create a JWT access token."""
+    to_encode = data.copy()
 
-#     return jwt.encode(
-#         to_encode,
-#         settings.SECRET_KEY,
-#         algorithm=settings.ALGORITHM
-#     )
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    to_encode.update({
+        "exp": expire
+    })
+
+    return jwt.encode(
+        to_encode,
+        settings.SECRET_KEY,
+        algorithm=settings.ALGORITHM
+    )
