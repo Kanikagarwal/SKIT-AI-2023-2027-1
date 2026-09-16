@@ -10,6 +10,11 @@ import Rubrics from "./pages/Rubrics"
 import Students from "./pages/Students"
 import StudentDetails from "./pages/StudentDetails"
 import TeacherLayout from "./pages/TeacherLayout"
+import StudentDashboard from "./pages/StudentDashboard"
+import StudentEvaluations from "./pages/StudentEvaluations"
+import StudentAnswerSheets from "./pages/StudentAnswerSheets"
+import StudentResult from "./pages/StudentResult"
+import StudentProfile from "./pages/StudentProfile"
 
 function App() {
   return (
@@ -81,6 +86,31 @@ function App() {
               <StudentDetails />
             </TeacherLayout>
           }
+        />
+
+        <Route
+          path="/student-dashboard"
+          element={<StudentDashboard />}
+        />
+
+        <Route
+          path="/student-evaluations"
+          element={<StudentEvaluations />}
+        />
+
+        <Route
+          path="/student-answer-sheets"
+          element={<StudentAnswerSheets />}
+        />
+
+        <Route
+          path="/student-result"
+          element={<StudentResult />}
+        />
+
+        <Route
+          path="/student-profile"
+          element={<StudentProfile />}
         />
 
       </Routes>
