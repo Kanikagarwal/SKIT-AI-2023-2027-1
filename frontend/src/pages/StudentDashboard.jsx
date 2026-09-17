@@ -1,6 +1,12 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 function StudentDashboard() {
+  const navigate = useNavigate()
+
+  const handleLogout = () => {
+    navigate("/")
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
 
@@ -16,7 +22,7 @@ function StudentDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
 
           <div className="text-right">
             <p className="text-xs font-semibold text-slate-700">
@@ -31,6 +37,14 @@ function StudentDashboard() {
           <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs font-bold">
             A
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-[10px] font-semibold text-slate-500 hover:text-red-600 transition"
+          >
+            Logout
+          </button>
 
         </div>
 

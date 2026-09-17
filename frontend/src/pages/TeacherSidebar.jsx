@@ -1,6 +1,8 @@
-import { NavLink } from "react-router-dom"
+import { NavLink, useNavigate } from "react-router-dom"
 
 function TeacherSidebar() {
+  const navigate = useNavigate()
+
   const menuItems = [
     { name: "Dashboard", path: "/teacher-dashboard" },
     { name: "Evaluations", path: "/evaluations" },
@@ -8,6 +10,10 @@ function TeacherSidebar() {
     { name: "Rubrics", path: "/rubrics" },
     { name: "Students", path: "/students" },
   ]
+
+  const handleLogout = () => {
+    navigate("/")
+  }
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-60 bg-white border-r border-slate-200 flex flex-col">
@@ -31,7 +37,6 @@ function TeacherSidebar() {
       <nav className="flex-1 p-3 space-y-1">
 
         {menuItems.map((item) => (
-
           <NavLink
             key={item.path}
             to={item.path}
@@ -45,7 +50,6 @@ function TeacherSidebar() {
           >
             {item.name}
           </NavLink>
-
         ))}
 
       </nav>
@@ -58,7 +62,7 @@ function TeacherSidebar() {
             T
           </div>
 
-          <div>
+          <div className="flex-1">
             <p className="text-xs font-semibold text-slate-700">
               Teacher
             </p>
@@ -67,6 +71,14 @@ function TeacherSidebar() {
               Evaluation Portal
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="text-[10px] font-semibold text-slate-500 hover:text-red-600 transition"
+          >
+            Logout
+          </button>
 
         </div>
 

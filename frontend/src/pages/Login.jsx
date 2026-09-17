@@ -2,13 +2,13 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
 function Login() {
+  const navigate = useNavigate()
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("")
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
-
-  const navigate = useNavigate()
 
   const handleLogin = (e) => {
     e.preventDefault()
@@ -27,8 +27,10 @@ function Login() {
 
     if (role === "teacher") {
       navigate("/teacher-dashboard")
-    } else {
-      alert("Student dashboard will be available soon.")
+    }
+
+    if (role === "student") {
+      navigate("/student-dashboard")
     }
   }
 
@@ -51,6 +53,7 @@ function Login() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5">
+
           <form onSubmit={handleLogin} className="space-y-3">
 
             <div>
@@ -161,6 +164,7 @@ function Login() {
               Create account
             </Link>
           </p>
+
         </div>
 
         <p className="text-center text-[10px] text-slate-400 mt-1.5">
