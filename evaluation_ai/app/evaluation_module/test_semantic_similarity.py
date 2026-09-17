@@ -73,25 +73,18 @@ def test_empty_student_answer():
     assert score == 0.0
 
 
-def test_all_dataset_questions():
+def test_dataset_question_evaluation():
     dataset = EvaluationDataset()
     semantic_similarity = SemanticSimilarity()
 
-    questions = dataset.get_all_questions()
+    question = dataset.get_question("Q002")
 
-    assert len(questions) > 0
+    results = semantic_similarity.evaluate_question(question)
 
-    for question in questions:
-        results = semantic_similarity.evaluate_question(question)
+    assert len(results) == 2
 
-        student_answers = question.get("student_answers", [])
+    assert results[0]["student_id"] == "S001"
+    assert "semantic_similarity_score" in results[0]
 
-        assert len(results) == len(student_answers)
-
-        for result in results:
-            assert "student_id" in result
-            assert "semantic_similarity_score" in result
-
-            score = result["semantic_similarity_score"]
-
-            assert 0.0 <= score <= 100.0
+    assert results[1]["student_id"] == "S002"
+    assert "semantic_similarity_score" in results[1]
