@@ -1,7 +1,9 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 
 function Register() {
+  const navigate = useNavigate()
+
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [role, setRole] = useState("")
@@ -35,7 +37,7 @@ function Register() {
     }
 
     setError("")
-    alert("Account details are valid.")
+    navigate("/")
   }
 
   return (
@@ -57,6 +59,7 @@ function Register() {
         </div>
 
         <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+
           <form onSubmit={handleRegister} className="space-y-2">
 
             <div>
@@ -194,6 +197,7 @@ function Register() {
               </Link>
             </p>
           </div>
+
         </div>
 
         <p className="text-center text-[9px] text-slate-400 mt-1">
