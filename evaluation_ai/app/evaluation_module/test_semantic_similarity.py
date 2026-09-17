@@ -1,6 +1,7 @@
 from evaluation_ai.app.evaluation_module.semantic_similarity import (
     SemanticSimilarity
 )
+from evaluation_ai.app.evaluation_module.dataset import EvaluationDataset
 
 
 def test_identical_answers():
@@ -72,20 +73,25 @@ def test_empty_student_answer():
     assert score == 0.0
 
 
-def test_dataset_question_evaluation():
-    from evaluation_ai.app.evaluation_module.dataset import EvaluationDataset
-
+def test_all_dataset_questions():
     dataset = EvaluationDataset()
     semantic_similarity = SemanticSimilarity()
 
-    question = dataset.get_question("Q002")
+    questions = dataset.get_all_questions()
 
-    results = semantic_similarity.evaluate_question(question)
+    assert len(questions) > 0
 
-    assert len(results) == 2
+    for question in questions:
+        results = semantic_similarity.evaluate_question(question)
 
-    assert results[0]["student_id"] == "S001"
-    assert "semantic_similarity_score" in results[0]
+        student_answers = question.get("student_answers", [])
 
-    assert results[1]["student_id"] == "S002"
-    assert "semantic_similarity_score" in results[1]
+        assert len(results) == len(student_answers)
+
+        for result in results:
+            assert "student_id" in result
+            assert "semantic_similarity_score" in result
+
+            score = result["semantic_similarity_score"]
+
+            assert 0.0 <= score <= 100.0
