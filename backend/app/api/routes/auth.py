@@ -10,12 +10,55 @@ from app.schemas.auth import (
 from app.schemas.user import UserResponse
 from app.services.auth_service import login_user
 
+from app.middleware.auth import (
+    get_current_user,
+    require_role
+)
+
+from app.models.user import UserRole
 
 router = APIRouter(
     prefix="/api/auth",
     tags=["Authentication"]
 )
 
+@router.get("/admin-only")
+def admin_only(
+    current_user=Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    return {
+        "message": "Welcome Admin!",
+        "user": current_user.email,
+        "role": current_user.role
+    }
+
+
+@router.get("/teacher-only")
+def teacher_only(
+    current_user=Depends(
+        require_role(UserRole.TEACHER)
+    )
+):
+    return {
+        "message": "Welcome Teacher!",
+        "user": current_user.email,
+        "role": current_user.role
+    }
+
+
+@router.get("/student-only")
+def student_only(
+    current_user=Depends(
+        require_role(UserRole.STUDENT)
+    )
+):
+    return {
+        "message": "Welcome Student!",
+        "user": current_user.email,
+        "role": current_user.role
+    }
 
 @router.post(
     "/login",
