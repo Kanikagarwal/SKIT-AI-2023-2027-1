@@ -1,6 +1,6 @@
-import axios from "axios";
+import axios from "axios"
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "http://127.0.0.1:8000"
 
 export const loginUser = async (email, password) => {
   const response = await axios.post(
@@ -9,10 +9,10 @@ export const loginUser = async (email, password) => {
       email,
       password,
     }
-  );
+  )
 
-  return response.data;
-};
+  return response.data
+}
 
 export const getCurrentUser = async (token) => {
   const response = await axios.get(
@@ -22,7 +22,7 @@ export const getCurrentUser = async (token) => {
         Authorization: `Bearer ${token}`,
       },
     }
-  );
+  )
 
-  return response.data;
-};
+  return response.data
+}

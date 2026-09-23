@@ -1,16 +1,19 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { useAuth } from "../context/AuthContext"
 
 function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
 
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [role, setRole] = useState("")
   const [error, setError] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault()
 
     if (!email || !password || !role) {
@@ -24,13 +27,39 @@ function Login() {
     }
 
     setError("")
+    setIsLoading(true)
 
-    if (role === "teacher") {
-      navigate("/teacher-dashboard")
-    }
+    try {
+      // Send credentials to FastAPI
+      const data = await login(email, password)
 
-    if (role === "student") {
-      navigate("/student-dashboard")
+      // Get the actual role returned by the backend
+      const backendRole = data.user.role.toLowerCase()
+
+      // Make sure selected role matches actual account role
+      if (backendRole !== role) {
+        setError(
+          `You selected ${role}, but this account is registered as ${backendRole}.`
+        )
+        return
+      }
+
+      // Redirect according to backend role
+      if (backendRole === "admin") {
+        navigate("/admin-dashboard")
+      } else if (backendRole === "teacher") {
+        navigate("/teacher-dashboard")
+      } else if (backendRole === "student") {
+        navigate("/student-dashboard")
+      }
+
+    } catch (error) {
+      setError(
+        error.response?.data?.detail ||
+        "Invalid email or password."
+      )
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -56,6 +85,7 @@ function Login() {
 
           <form onSubmit={handleLogin} className="space-y-3">
 
+            {/* Email */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Email address
@@ -73,6 +103,7 @@ function Login() {
               />
             </div>
 
+            {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-medium text-slate-700">
@@ -109,6 +140,7 @@ function Login() {
               </div>
             </div>
 
+            {/* Role */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Login as
@@ -123,22 +155,30 @@ function Login() {
                 className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm text-slate-600 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               >
                 <option value="">Select your role</option>
+                <option value="admin">Admin</option>
                 <option value="teacher">Teacher</option>
                 <option value="student">Student</option>
               </select>
             </div>
 
+            {/* Error */}
             {error && (
               <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5">
                 {error}
               </p>
             )}
 
+            {/* Login Button */}
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-semibold transition"
+              disabled={isLoading}
+              className={`w-full text-white py-2 rounded-lg text-sm font-semibold transition ${
+                isLoading
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              Sign in
+              {isLoading ? "Signing in..." : "Sign in"}
             </button>
 
           </form>
