@@ -1,0 +1,21 @@
+index,ground_truth,prediction,cer,wer
+0,"assuredness "" Bella Bella Marie "" ( Parlophone ) , a lively song that changes tempo mid-way .","assuredness "" Bella Bella Marie "" ( Bishopsome ) a lively song that changes tempo midway",0.11827956989247312,0.2222222222222222
+1,"I don't think he will storm the charts with this one , but it 's a good start .","I don't think he will storm the charts with this one , but it's a good start .",0.012658227848101266,0.10526315789473684
+2,"CHRIS CHARLES , 39 , who lives in Stockton-on-Tees , is an accountant .","CHRIS CHARLES , 33 , who lives in Stockton - on - Tee's , is an accountant .",0.08450704225352113,0.42857142857142855
+3,Become a success with a disc and hey presto ! You 're a star ... . Rolly sings with,Become a success with a disc and they presto ! You're a star ... Rolly sings with,0.04819277108433735,0.21052631578947367
+4,"Tolch , as he is known in Tin Pan Alley , likes songs with a month in the title . He wrote","Folch , as he is known in Tin Pan Alley , lives , with a month in the title . He wrote",0.07777777777777778,0.13636363636363635
+5,""" My September Love , "" the big David Whitfield hit of 1956 .",""" My September Love "" , the big David Whitfield hit of 1956 .",0.03278688524590164,0.14285714285714285
+6,He is also a director of a couple of garages . And he finds time as well to be a lyric,He is also a director of a couple of garages . And he finds time as well to be a lyric,0.0,0.0
+7,"writer . He writes with Tolchard Evans , composer of "" Lady of Spain "" and other big hits .","writer . He writes with Tolchard Evans , composer of "" Lady of Spain "" and other big hits",0.02197802197802198,0.05
+8,"The numbers include "" Scotland the Brave , "" "" Men of Harlech , ""","The numbers include "" Scotland the Brave , "" "" Men of Harlem , """,0.03076923076923077,0.06666666666666667
+9,"Fay Compton stars in "" No Hiding Place "" (I T V , 9.35 p.m. ) .","Bay Compton stars in "" No. Hiding Place "" ( I.T.P. , 9.33 p.m. ) .",0.12698412698412698,0.35294117647058826
+10,She plays the possessive mother of a man whose hobby revolves,She plays the possessive mother of a man whose hobby revolues,0.01639344262295082,0.09090909090909091
+11,round a doll's house .,round a doll's house .,0.0,0.0
+12,"THREE people will be hypnotised in tonight's "" Lifeline ""","THREE people will be hypothesized in tonight's "" Lifeline """,0.08771929824561403,0.1
+13,"( B B C , 10.15 ) .","cBE , 10.15 ) .",0.3157894736842105,0.5
+14,""" McNamara's Band , "" "" Greensleeves "" and "" English Rose . """,""" Mr. Namara's band , "" "" Greepyleves "" and "" English base . """,0.13114754098360656,0.2857142857142857
+15,of Rhodesia and Nyasaland ( 10.30 p.m. ) .,of Rhodesia and Nyasaland Co.30 p.m. ) .,0.09523809523809523,0.2222222222222222
+16,They will be asked to comment on the design of everyday articles,They will be asked to comment on the design of everyday articles,0.0,0.0
+17,"playwright Arnold Wesker . "" Instead , Muggeridge's appointment","playwright Arnold Walker . "" Instead , Muggeridge's opportunity",0.14285714285714285,0.2222222222222222
+18,such as a chair and a motor-car . The idea is to see what happens when,such as a chair and a motor-car . The idea is to see what happens when,0.0,0.0
+19,will be with Sir Roy Welensky the Premier of the Federation,will be with Sir Roy Welensky the Premier of the Federation,0.0,0.0
