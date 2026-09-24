@@ -13,7 +13,6 @@ app = FastAPI(
     description="AI-powered theory exam evaluation system",
     version="1.0.0"
 )
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
