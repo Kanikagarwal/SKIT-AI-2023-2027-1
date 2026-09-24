@@ -1,8 +1,15 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 from app.models.user import UserRole
+
+
+class UserCreateRequest(BaseModel):
+    name: str
+    email: EmailStr
+    password: str
+    role: UserRole
 
 
 class UserResponse(BaseModel):

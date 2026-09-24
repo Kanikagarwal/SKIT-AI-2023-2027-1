@@ -32,40 +32,68 @@ The module is being developed incrementally according to the project timeline.
 
 ## 2. Current Development Status
 
-### September - Answer Evaluation
+### August - Evaluation Dataset
 
-Current work completed:
+Work completed:
 
-- Integrated the existing evaluation dataset with the Python evaluation module.
+- Created the evaluation dataset containing questions, model answers, student answers, keywords and maximum marks.
 - Implemented dataset loading.
 - Implemented question retrieval.
 - Implemented model answer retrieval.
 - Implemented keyword retrieval.
 - Implemented student answer retrieval.
+
+### September - Answer Evaluation
+
+#### Milestone 1 - Keyword Matching
+
+Work completed:
+
+- Implemented text normalization.
 - Implemented basic keyword matching.
-- Implemented matched and missing keyword identification.
+- Implemented matched keyword identification.
+- Implemented missing keyword identification.
 - Implemented keyword match percentage calculation.
-- Tested keyword matching using the existing dataset.
+- Implemented a complete keyword evaluation result.
+- Added automated tests using `pytest`.
+- Verified the keyword matching functionality using the existing evaluation dataset.
+- All current keyword matching tests pass successfully.
+
+#### Milestone 2 - Semantic Similarity
+
+Current work:
+
+- Added the `sentence-transformers` dependency for semantic similarity processing.
+- Added a module-specific `requirements.txt` file.
+- Semantic similarity implementation is currently in progress.
 
 ### Current Status
 
 **In Progress**
 
-The keyword matching component is currently implemented and tested.
+The keyword matching component has been implemented and tested.
 
-Semantic similarity and combined answer evaluation are planned for the remainder of the September development period.
+The semantic similarity component is currently under development. After semantic similarity is implemented, the keyword-based and semantic evaluation methods will be combined as part of the remaining September Answer Evaluation work.
 
 ---
 
-## 3. Folder Structure
+## 3. Testing
 
-```text
-evaluation_ai/
-│
-├── app/
-│   └── evaluation_module/
-│       ├── __init__.py
-│       ├── dataset.py
-│       └── keyword_matching.py
-│
-└── README.md
+Automated testing is performed using `pytest`.
+
+The current keyword matching test suite includes:
+
+- `test_normalize_text`
+- `test_find_matched_keywords`
+- `test_calculate_keyword_score`
+- `test_find_missing_keywords`
+- `test_evaluate`
+
+Current test status:
+
+**5 tests passed**
+
+Test command:
+
+```bash
+python -m pytest evaluation_ai/app/evaluation_module/test_keyword_matching.py
