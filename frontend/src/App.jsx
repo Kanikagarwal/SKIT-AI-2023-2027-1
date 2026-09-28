@@ -15,6 +15,7 @@ import StudentEvaluations from "./pages/StudentEvaluations"
 import StudentAnswerSheets from "./pages/StudentAnswerSheets"
 import StudentResult from "./pages/StudentResult"
 import StudentProfile from "./pages/StudentProfile"
+import AdminDashboard from "./pages/AdminDashboard"
 
 function App() {
   return (
@@ -111,6 +112,11 @@ function App() {
         <Route
           path="/student-profile"
           element={<StudentProfile />}
+        />
+
+        <Route
+          path="/admin-dashboard"
+          element={<AdminDashboard />}
         />
 
       </Routes>

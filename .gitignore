@@ -21,11 +21,11 @@ dist-ssr
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.sw? 
 
 .env
 __pycache__/
 *.pyc
 venv/
 uploads/*
-node_modules
+backend/*.db

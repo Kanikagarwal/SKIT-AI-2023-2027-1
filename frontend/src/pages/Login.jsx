@@ -30,13 +30,10 @@ function Login() {
     setIsLoading(true)
 
     try {
-      // Send credentials to FastAPI
       const data = await login(email, password)
 
-      // Get the actual role returned by the backend
       const backendRole = data.user.role.toLowerCase()
 
-      // Make sure selected role matches actual account role
       if (backendRole !== role) {
         setError(
           `You selected ${role}, but this account is registered as ${backendRole}.`
@@ -44,7 +41,6 @@ function Login() {
         return
       }
 
-      // Redirect according to backend role
       if (backendRole === "admin") {
         navigate("/admin-dashboard")
       } else if (backendRole === "teacher") {
@@ -52,7 +48,6 @@ function Login() {
       } else if (backendRole === "student") {
         navigate("/student-dashboard")
       }
-
     } catch (error) {
       setError(
         error.response?.data?.detail ||
@@ -85,7 +80,6 @@ function Login() {
 
           <form onSubmit={handleLogin} className="space-y-3">
 
-            {/* Email */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Email address
@@ -103,7 +97,6 @@ function Login() {
               />
             </div>
 
-            {/* Password */}
             <div>
               <div className="flex items-center justify-between mb-1">
                 <label className="text-xs font-medium text-slate-700">
@@ -140,7 +133,6 @@ function Login() {
               </div>
             </div>
 
-            {/* Role */}
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-1">
                 Login as
@@ -161,14 +153,12 @@ function Login() {
               </select>
             </div>
 
-            {/* Error */}
             {error && (
               <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5">
                 {error}
               </p>
             )}
 
-            {/* Login Button */}
             <button
               type="submit"
               disabled={isLoading}
