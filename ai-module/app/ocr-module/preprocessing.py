@@ -106,3 +106,84 @@ class ImagePreprocessor:
             )
 
         return image
+
+    def enhance_handwriting(self, image: np.ndarray) -> np.ndarray:
+        """Enhance image contrast and stroke sharpness specifically for handwriting OCR.
+
+        Uses CLAHE, bilateral filtering, morphological closing, and unsharp masking.
+
+        Args:
+            image: Input image (grayscale or BGR NumPy array).
+
+        Returns:
+            Enhanced grayscale image optimized for handwriting recognition.
+        """
+        # 1. Convert to grayscale if image is in color (BGR)
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image.copy()
+
+        # 2. Apply CLAHE for local contrast enhancement on faint pen strokes
+        clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        enhanced = clahe.apply(gray)
+
+        # 3. Apply bilateral filtering to reduce noise while preserving sharp edges
+        filtered = cv2.bilateralFilter(
+            enhanced, d=9, sigmaColor=75, sigmaSpace=75
+        )
+
+        # 4. Perform morphological closing to reconnect broken/faint pen strokes
+        kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
+        closed = cv2.morphologyEx(filtered, cv2.MORPH_CLOSE, kernel_close)
+
+        # 5. Apply 3x3 unsharp mask kernel to sharpen character boundaries
+        kernel = np.array([
+            [-1, -1, -1],
+            [-1, 11, -1],  # High center weight (11) for strong edge definition
+            [-1, -1, -1],
+        ])
+        sharpened = cv2.filter2D(closed, -1, kernel)
+
+        return sharpened
+
+    def binarize(self, image: np.ndarray, for_handwriting: bool = True) -> np.ndarray:
+        """Apply adaptive Gaussian thresholding to separate text from background.
+
+        Args:
+            image: Input image (grayscale or BGR NumPy array).
+            for_handwriting: If True, uses a larger neighborhood block size (15)
+                and higher constant offset (C=10) optimized for handwriting.
+
+        Returns:
+            Binarized black-and-white image as a NumPy array.
+        """
+        # 1. Convert to grayscale if image is in color (BGR)
+        if len(image.shape) == 3:
+            gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = image.copy()
+
+        # 2. Apply adaptive Gaussian binarization based on text type
+        if for_handwriting:
+            # Larger neighborhood context (blockSize=15) and threshold offset (C=10)
+            binary = cv2.adaptiveThreshold(
+                gray,
+                255,
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY,
+                blockSize=15,
+                C=10,
+            )
+        else:
+            # Standard parameters (blockSize=11, C=2) for uniform printed text
+            binary = cv2.adaptiveThreshold(
+                gray,
+                255,
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY,
+                11,
+                2,
+            )
+
+        return binary
