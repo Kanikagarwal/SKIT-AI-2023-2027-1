@@ -13,6 +13,7 @@ def create_exam(
     total_marks: int,
     created_by: int
 ):
+    
     exam = Exam(
         title=title,
         subject=subject,
@@ -29,3 +30,20 @@ def create_exam(
     db.refresh(exam)
 
     return exam
+
+def get_all_exams(db: Session):
+    return (
+        db.query(Exam)
+        .order_by(Exam.created_at.desc())
+        .all()
+    )
+
+def get_exam_by_id(
+    db: Session,
+    exam_id: int
+):
+    return (
+        db.query(Exam)
+        .filter(Exam.id == exam_id)
+        .first()
+    )
