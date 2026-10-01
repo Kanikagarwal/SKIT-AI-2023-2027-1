@@ -5,6 +5,7 @@ from app.core.database import Base, engine
 from app.api.routes.users import router as users_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.exam import Exam
+from app.api.routes.exams import router as exams_router
 
 Base.metadata.create_all(bind=engine)
 
@@ -28,7 +29,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(users_router)
-
+app.include_router(exams_router)
 @app.get("/")
 def root():
     return {
