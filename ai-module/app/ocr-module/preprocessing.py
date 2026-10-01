@@ -187,3 +187,62 @@ class ImagePreprocessor:
             )
 
         return binary
+
+    def denoise(self, image: np.ndarray, preserve_detail: bool = True) -> np.ndarray:
+        """Remove image noise while optionally preserving fine handwriting details.
+
+        Args:
+            image: Input image as a NumPy array.
+            preserve_detail: If True, uses Non-Local Means denoising for handwriting.
+                If False, applies median blur and morphological opening for typed text.
+
+        Returns:
+            Denoised image as a NumPy array.
+        """
+        if preserve_detail:
+            # Gentle Non-Local Means denoising - preserves thin pen stroke details
+            denoised = cv2.fastNlMeansDenoising(
+                image, None, h=10, templateWindowSize=7, searchWindowSize=21
+            )
+            return denoised
+
+        # Aggressive denoising for typed/printed text (median blur + opening)
+        denoised = cv2.medianBlur(image, 3)
+        kernel = np.ones((2, 2), np.uint8)
+        denoised = cv2.morphologyEx(denoised, cv2.MORPH_OPEN, kernel)
+        return denoised
+
+    def stitch_images(self, images: List[np.ndarray]) -> np.ndarray:
+        """Vertically stitch multiple page images into one continuous image stream.
+
+        Args:
+            images: List of page images as NumPy arrays.
+
+        Returns:
+            Single vertically concatenated NumPy array image.
+
+        Raises:
+            ValueError: If the input images list is empty.
+        """
+        if len(images) == 0:
+            raise ValueError("No images to stitch")
+
+        if len(images) == 1:
+            return images[0]
+
+        # 1. Standardize all page widths to match the first image's width
+        target_width = images[0].shape[1]
+        resized_images: List[np.ndarray] = []
+
+        for img in images:
+            if img.shape[1] != target_width:
+                h, w = img.shape[:2]
+                ratio = target_width / float(w)
+                new_h = int(h * ratio)
+                img = cv2.resize(img, (target_width, new_h))
+            resized_images.append(img)
+
+        # 2. Vertically stack (concatenate) all pages into a single image
+        stitched = np.vstack(resized_images)
+
+        return stitched
