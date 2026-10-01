@@ -1,0 +1,45 @@
+{
+  "exam_id": "IOT_MIDTERM_2026",
+
+  "student": {
+    "roll_no": "ESKCT003",
+    "name": "Rohan Verma"
+  },
+
+  "answers": {
+    "1": {
+      "attempted": true,
+      "answer": "IoT devices are connected and can sense information from the environment."
+    },
+
+    "2": {
+      "attempted": true,
+      "answer": "Cloud computing is used to store IoT data."
+    },
+
+    "3": {
+      "attempted": true,
+      "answer": "In publish-subscribe communication, a publisher sends information and subscribers receive it."
+    },
+
+    "4": {
+      "attempted": true,
+      "answer": "Sensors are used to measure things. Temperature sensors measure temperature and proximity sensors detect objects."
+    },
+
+    "5": {
+      "attempted": true,
+      "answer": "TinyOS and RIOT OS are operating systems used in IoT. TinyOS is lightweight and RIOT supports IoT devices."
+    },
+
+    "6": {
+      "attempted": true,
+      "answer": "REST uses client-server communication and stateless requests. It also has a uniform interface and can use caching."
+    },
+
+    "7": {
+      "attempted": false,
+      "answer": null
+    }
+  }
+}

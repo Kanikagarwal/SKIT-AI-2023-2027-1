@@ -1,0 +1,45 @@
+{
+  "exam_id": "IOT_MIDTERM_2026",
+
+  "student": {
+    "roll_no": "ESKCT002",
+    "name": "Diya Mehta"
+  },
+
+  "answers": {
+    "1": {
+      "attempted": true,
+      "answer": "IoT is characterized by connected devices, sensing, communication and processing of information."
+    },
+
+    "2": {
+      "attempted": true,
+      "answer": "Cloud computing helps IoT by providing remote storage and computing resources. Data collected by devices can be sent to the cloud for processing and analysis."
+    },
+
+    "3": {
+      "attempted": true,
+      "answer": "Publishers send information to a broker on a particular topic. Subscribers subscribe to the topic and receive the published information."
+    },
+
+    "4": {
+      "attempted": true,
+      "answer": "IoT sensors can measure different physical quantities. Temperature sensors measure temperature and proximity sensors detect nearby objects. The measured information is sent to the IoT system."
+    },
+
+    "5": {
+      "attempted": true,
+      "answer": "TinyOS is designed for small sensor network devices and uses an event-driven component based architecture with low power requirements. RIOT OS is designed for IoT devices and supports multithreading and more conventional programming approaches."
+    },
+
+    "6": {
+      "attempted": false,
+      "answer": null
+    },
+
+    "7": {
+      "attempted": true,
+      "answer": "The four stages of IoT architecture are sensing, networking, data processing and application. Sensors collect information from the environment. The network transfers this information, the processing stage analyzes it, and the application stage provides useful services to the user."
+    }
+  }
+}

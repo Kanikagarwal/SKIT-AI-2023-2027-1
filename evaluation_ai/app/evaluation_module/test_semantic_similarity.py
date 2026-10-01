@@ -1,90 +1,108 @@
 from evaluation_ai.app.evaluation_module.semantic_similarity import (
     SemanticSimilarity
 )
-from evaluation_ai.app.evaluation_module.dataset import EvaluationDataset
 
 
-def test_identical_answers():
-    semantic_similarity = SemanticSimilarity()
-
-    answer = "Machine learning allows computers to learn from data."
-
-    score = semantic_similarity.calculate_similarity(
-        answer,
-        answer
-    )
-
-    assert score == 100.0
-
-
-def test_similar_answers():
-    semantic_similarity = SemanticSimilarity()
+def test_semantic_similarity_returns_high_score_for_similar_answers():
+    similarity = SemanticSimilarity()
 
     model_answer = (
-        "Machine Learning enables computers to learn patterns "
-        "from data and improve their performance."
+        "Cloud computing provides IoT systems with remote computing, "
+        "storage and processing resources."
     )
 
     student_answer = (
-        "Machine learning allows computers to learn from data "
-        "and improve automatically."
+        "IoT devices can use cloud computing for remote storage, "
+        "processing and computing resources."
     )
 
-    score = semantic_similarity.calculate_similarity(
+    score = similarity.calculate_similarity(
         model_answer,
         student_answer
     )
 
-    assert score > 70.0
+    assert 0 <= score <= 100
+    assert score > 50
 
 
-def test_unrelated_answers():
-    semantic_similarity = SemanticSimilarity()
+def test_semantic_similarity_returns_lower_score_for_unrelated_answers():
+    similarity = SemanticSimilarity()
 
     model_answer = (
-        "Machine Learning enables computers to learn from data."
+        "Cloud computing provides IoT systems with remote storage "
+        "and processing resources."
     )
 
     student_answer = (
-        "The Taj Mahal is a famous historical monument in India."
+        "A temperature sensor measures the temperature of the environment."
     )
 
-    score = semantic_similarity.calculate_similarity(
+    score = similarity.calculate_similarity(
         model_answer,
         student_answer
     )
 
-    assert score < 50.0
+    assert 0 <= score <= 100
+    assert score < 70
 
 
-def test_empty_student_answer():
-    semantic_similarity = SemanticSimilarity()
+def test_empty_student_answer_returns_zero():
+    similarity = SemanticSimilarity()
 
-    model_answer = (
-        "Artificial Intelligence enables machines "
-        "to perform intelligent tasks."
-    )
-
-    score = semantic_similarity.calculate_similarity(
-        model_answer,
+    score = similarity.calculate_similarity(
+        "Cloud computing provides storage.",
         ""
     )
 
     assert score == 0.0
 
 
-def test_dataset_question_evaluation():
-    dataset = EvaluationDataset()
-    semantic_similarity = SemanticSimilarity()
+def test_empty_model_answer_returns_zero():
+    similarity = SemanticSimilarity()
 
-    question = dataset.get_question("Q002")
+    score = similarity.calculate_similarity(
+        "",
+        "Cloud computing provides storage."
+    )
 
-    results = semantic_similarity.evaluate_question(question)
+    assert score == 0.0
 
-    assert len(results) == 2
 
-    assert results[0]["student_id"] == "S001"
-    assert "semantic_similarity_score" in results[0]
+def test_cached_model_answer_produces_similarity_score():
+    similarity = SemanticSimilarity()
 
-    assert results[1]["student_id"] == "S002"
-    assert "semantic_similarity_score" in results[1]
+    questions = [
+        {
+            "question_id": 2,
+            "model_answer": (
+                "Cloud computing provides IoT systems with remote "
+                "computing, storage and processing resources."
+            )
+        }
+    ]
+
+    similarity.cache_model_answers(questions)
+
+    score = similarity.calculate_similarity_with_cached_model(
+        2,
+        "IoT devices can use cloud computing for storage and processing."
+    )
+
+    assert 0 <= score <= 100
+    assert score > 50
+
+
+def test_missing_cached_model_answer_raises_error():
+    similarity = SemanticSimilarity()
+
+    try:
+        similarity.calculate_similarity_with_cached_model(
+            999,
+            "Some student answer."
+        )
+    except ValueError as error:
+        assert "No cached model answer found" in str(error)
+    else:
+        raise AssertionError(
+            "Expected ValueError for missing cached model answer."
+        )

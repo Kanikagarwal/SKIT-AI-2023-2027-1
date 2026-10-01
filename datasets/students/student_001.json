@@ -1,0 +1,45 @@
+{
+  "exam_id": "IOT_MIDTERM_2026",
+
+  "student": {
+    "roll_no": "ESKCT001",
+    "name": "Aarav Sharma"
+  },
+
+  "answers": {
+    "1": {
+      "attempted": true,
+      "answer": "IoT devices have characteristics such as connectivity, sensing, communication and data processing."
+    },
+
+    "2": {
+      "attempted": true,
+      "answer": "Cloud computing provides storage and processing resources to IoT systems. IoT devices can send their collected data to the cloud for storage and analysis."
+    },
+
+    "3": {
+      "attempted": true,
+      "answer": "In the publish-subscribe model, publishers send messages through a broker using topics and subscribers receive messages by subscribing to those topics."
+    },
+
+    "4": {
+      "attempted": true,
+      "answer": "Sensors can be classified according to what they measure. A temperature sensor measures temperature, while a proximity sensor detects the presence or distance of an object. These sensors provide information to IoT systems."
+    },
+
+    "5": {
+      "attempted": true,
+      "answer": "TinyOS is a lightweight operating system for resource constrained sensor networks and uses an event driven architecture. RIOT OS supports constrained IoT devices and provides multithreading and a more conventional operating system environment."
+    },
+
+    "6": {
+      "attempted": true,
+      "answer": "REST has several architectural constraints. These include client-server architecture, stateless communication, cacheable responses, uniform interface and layered system. Code on demand is also an optional constraint."
+    },
+
+    "7": {
+      "attempted": false,
+      "answer": null
+    }
+  }
+}
