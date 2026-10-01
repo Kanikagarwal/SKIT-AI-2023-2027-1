@@ -1,0 +1,45 @@
+{
+  "exam_id": "IOT_MIDTERM_2026",
+
+  "student": {
+    "roll_no": "ESKCT005",
+    "name": "Kabir Joshi"
+  },
+
+  "answers": {
+    "1": {
+      "attempted": true,
+      "answer": "IoT means Internet of Things."
+    },
+
+    "2": {
+      "attempted": true,
+      "answer": "Cloud is used with IoT."
+    },
+
+    "3": {
+      "attempted": true,
+      "answer": "It is a communication model."
+    },
+
+    "4": {
+      "attempted": true,
+      "answer": "Sensors collect data."
+    },
+
+    "5": {
+      "attempted": true,
+      "answer": "TinyOS and RIOT OS are used for IoT."
+    },
+
+    "6": {
+      "attempted": true,
+      "answer": ""
+    },
+
+    "7": {
+      "attempted": false,
+      "answer": null
+    }
+  }
+}

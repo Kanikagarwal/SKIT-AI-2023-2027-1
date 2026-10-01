@@ -4,19 +4,24 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 class SemanticSimilarity:
     """
-    Calculates semantic similarity between a model answer
-    and a student's answer using sentence embeddings.
+    Calculates semantic similarity between model answers
+    and student answers.
+
+    The transformer model is loaded once when this object is
+    created. Model-answer embeddings can be cached and reused
+    across multiple student evaluations.
     """
 
     def __init__(self, model_name="all-MiniLM-L6-v2"):
         self.model = SentenceTransformer(model_name)
+        self.model_answer_embeddings = {}
 
     def calculate_similarity(self, model_answer, student_answer):
         """
-        Calculate semantic similarity between two answers.
+        Calculate semantic similarity between one model answer
+        and one student answer.
 
-        Returns:
-            float: Similarity score as a percentage from 0 to 100.
+        Returns a percentage between 0 and 100.
         """
 
         if not model_answer or not student_answer:
@@ -39,64 +44,73 @@ class SemanticSimilarity:
 
         return round(float(similarity_percentage), 2)
 
-    def evaluate_question(self, question):
+    def cache_model_answers(self, questions):
         """
-        Evaluate all student answers for a single question.
+        Encode and cache model answers for the supplied questions.
 
-        Compares each student's answer with the question's
-        model answer using semantic similarity.
-
-        Returns:
-            list: Semantic similarity results for each student.
+        Model answers are encoded only once and reused for
+        subsequent student evaluations.
         """
 
-        model_answer = question.get("model_answer", "")
-        student_answers = question.get("student_answers", [])
+        model_answers = []
+        question_ids = []
 
-        results = []
+        for question in questions:
+            question_id = question.get("question_id")
+            model_answer = question.get("model_answer", "")
 
-        for student in student_answers:
-            student_id = student.get("student_id")
-            student_answer = student.get("answer", "")
+            if not model_answer:
+                continue
 
-            score = self.calculate_similarity(
-                model_answer,
-                student_answer
+            question_ids.append(question_id)
+            model_answers.append(model_answer)
+
+        if not model_answers:
+            return
+
+        embeddings = self.model.encode(model_answers)
+
+        for question_id, embedding in zip(
+            question_ids,
+            embeddings
+        ):
+            self.model_answer_embeddings[question_id] = embedding
+
+    def calculate_similarity_with_cached_model(
+        self,
+        question_id,
+        student_answer
+    ):
+        """
+        Calculate semantic similarity using a cached model-answer
+        embedding.
+        """
+
+        if not student_answer:
+            return 0.0
+
+        model_embedding = self.model_answer_embeddings.get(
+            question_id
+        )
+
+        if model_embedding is None:
+            raise ValueError(
+                f"No cached model answer found for "
+                f"question {question_id}."
             )
 
-            results.append(
-                {
-                    "student_id": student_id,
-                    "semantic_similarity_score": score
-                }
-            )
+        student_embedding = self.model.encode([student_answer])
 
-        return results
+        similarity = cosine_similarity(
+            [model_embedding],
+            student_embedding
+        )[0][0]
 
+        similarity_percentage = similarity * 100
 
-if __name__ == "__main__":
-    from evaluation_ai.app.evaluation_module.dataset import EvaluationDataset
+        similarity_percentage = max(
+            0.0,
+            min(100.0, similarity_percentage)
+        )
 
-    dataset = EvaluationDataset()
-    semantic_similarity = SemanticSimilarity()
-
-    questions = dataset.get_all_questions()
-
-    print("Semantic Similarity Evaluation")
-    print("=" * 60)
-
-    for question in questions:
-        question_id = question.get("question_id")
-        question_text = question.get("question")
-
-        print(f"\nQuestion ID: {question_id}")
-        print(f"Question: {question_text}")
-
-        results = semantic_similarity.evaluate_question(question)
-
-        for result in results:
-            print(
-                f"Student ID: {result['student_id']} | "
-                f"Semantic Similarity: "
-                f"{result['semantic_similarity_score']}%"
-            )
+        return round(float(similarity_percentage), 2)

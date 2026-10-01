@@ -6,78 +6,109 @@ from evaluation_ai.app.evaluation_module.semantic_similarity import (
 
 class AnswerEvaluator:
     """
-    Combines keyword matching and semantic similarity
-    to evaluate a student's answer.
+    Evaluates student answers against the model answer and keywords.
+
+    This module produces evaluation evidence for the September
+    Answer Evaluation phase.
+
+    Final marks, rubric-based scoring and feedback generation
+    are handled in later project phases.
     """
 
-    def __init__(self):
+    def __init__(self, answer_key=None):
         self.keyword_matcher = KeywordMatcher()
         self.semantic_similarity = SemanticSimilarity()
 
-    def evaluate(self, question, student_answer):
-        """
-        Evaluate a student answer using keyword matching
-        and semantic similarity.
+        if answer_key is not None:
+            self.semantic_similarity.cache_model_answers(
+                answer_key.get("questions", [])
+            )
 
-        Returns:
-            dict: Combined evaluation result.
+    def evaluate_question(self, question, student_answer):
         """
+        Evaluate one attempted question.
+        """
+
+        if student_answer is None:
+            student_answer = ""
 
         keywords = question.get("keywords", [])
-        model_answer = question.get("model_answer", "")
+        question_id = question.get("question_id")
 
         keyword_result = self.keyword_matcher.evaluate(
             student_answer,
             keywords
         )
 
-        semantic_score = self.semantic_similarity.calculate_similarity(
-            model_answer,
-            student_answer
-        )
-
-        keyword_score = keyword_result["keyword_score"]
-
-        combined_score = (
-            (keyword_score + semantic_score) / 2
+        semantic_score = (
+            self.semantic_similarity
+            .calculate_similarity_with_cached_model(
+                question_id,
+                student_answer
+            )
         )
 
         return {
-            "keyword_score": keyword_score,
-            "semantic_similarity_score": semantic_score,
-            "combined_score": round(combined_score, 2),
-            "matched_keywords": keyword_result["matched_keywords"],
-            "missing_keywords": keyword_result["missing_keywords"]
+            "keyword_evidence": {
+                "matched_keywords": keyword_result["matched_keywords"],
+                "missing_keywords": keyword_result["missing_keywords"],
+                "keyword_score": keyword_result["keyword_score"]
+            },
+            "semantic_similarity_score": semantic_score
         }
 
+    def evaluate(self, answer_key, student_submission):
+        """
+        Evaluate all attempted questions for one student.
+        """
 
-if __name__ == "__main__":
-    from evaluation_ai.app.evaluation_module.dataset import EvaluationDataset
+        exam_id = answer_key.get("exam_id")
+        student = student_submission.get("student", {})
+        student_answers = student_submission.get("answers", {})
 
-    dataset = EvaluationDataset()
-    evaluator = AnswerEvaluator()
+        questions = answer_key.get("questions", [])
 
-    question = dataset.get_question("Q001")
+        results = {
+            "exam_id": exam_id,
+            "student": {
+                "roll_no": student.get("roll_no"),
+                "name": student.get("name")
+            },
+            "questions": []
+        }
 
-    if question is None:
-        print("Question not found.")
-        exit()
+        for question in questions:
+            question_id = question.get("question_id")
+            question_key = str(question_id)
 
-    print("Answer Evaluation")
-    print("=" * 60)
+            answer_data = student_answers.get(
+                question_key,
+                {
+                    "attempted": False,
+                    "answer": None
+                }
+            )
 
-    for student in question.get("student_answers", []):
-        result = evaluator.evaluate(
-            question,
-            student.get("answer", "")
-        )
+            attempted = answer_data.get("attempted", False)
+            student_answer = answer_data.get("answer")
 
-        print(f"\nStudent ID: {student.get('student_id')}")
-        print(f"Keyword Score: {result['keyword_score']}%")
-        print(
-            "Semantic Similarity: "
-            f"{result['semantic_similarity_score']}%"
-        )
-        print(f"Combined Score: {result['combined_score']}%")
-        print(f"Matched Keywords: {result['matched_keywords']}")
-        print(f"Missing Keywords: {result['missing_keywords']}")
+            question_result = {
+                "question_id": question_id,
+                "part": question.get("part"),
+                "max_marks": question.get("max_marks"),
+                "attempted": attempted
+            }
+
+            if not attempted:
+                question_result["evaluation"] = None
+            else:
+                question_result["evaluation"] = (
+                    self.evaluate_question(
+                        question,
+                        student_answer
+                    )
+                )
+
+            results["questions"].append(question_result)
+
+        return results

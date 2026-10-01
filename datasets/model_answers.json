@@ -1,0 +1,154 @@
+{
+  "exam_id": "IOT_MIDTERM_2026",
+  "exam": {
+    "course_title": "Internet of Things",
+    "course_code": "7CS4-01",
+    "semester": "VII",
+    "branch": "CSE",
+    "duration": "1.5 Hours",
+    "maximum_marks": 20
+  },
+  "sections": {
+    "A": {
+      "name": "Short answer type questions",
+      "attempt_rule": "all_compulsory",
+      "questions": [1, 2, 3]
+    },
+    "B": {
+      "name": "Analytical/Problem solving questions",
+      "attempt_rule": "all_compulsory",
+      "questions": [4, 5]
+    },
+    "C": {
+      "name": "Descriptive/Analytical/Problem solving/Design questions",
+      "attempt_rule": "attempt_any_one",
+      "questions": [6, 7]
+    }
+  },
+  "questions": [
+    {
+      "question_id": 1,
+      "part": "A",
+      "question": "Define the characteristics of IoT.",
+      "max_marks": 2,
+      "co": 1,
+      "blooms_level": 1,
+      "model_answer": "The main characteristics of IoT include connectivity, sensing, communication, data processing, intelligence and the ability of devices to interact with other devices and systems through a network.",
+      "keywords": [
+        "connectivity",
+        "sensing",
+        "communication",
+        "data processing",
+        "intelligence"
+      ]
+    },
+    {
+      "question_id": 2,
+      "part": "A",
+      "question": "Describe the IoT enabled Technology- Cloud Computing.",
+      "max_marks": 2,
+      "co": 1,
+      "blooms_level": 2,
+      "model_answer": "Cloud computing provides IoT systems with remote computing, storage and processing resources. IoT devices can send collected data to cloud platforms where the data can be stored, processed and analyzed.",
+      "keywords": [
+        "cloud computing",
+        "IoT",
+        "storage",
+        "processing",
+        "data",
+        "analysis"
+      ]
+    },
+    {
+      "question_id": 3,
+      "part": "A",
+      "question": "Describe the Publish-Subscribe communication model.",
+      "max_marks": 2,
+      "co": 1,
+      "blooms_level": 2,
+      "model_answer": "In the publish-subscribe communication model, publishers send messages to a broker under specific topics and subscribers receive messages by subscribing to those topics. Publishers and subscribers do not need to communicate directly.",
+      "keywords": [
+        "publish",
+        "subscribe",
+        "publisher",
+        "subscriber",
+        "broker",
+        "topic"
+      ]
+    },
+    {
+      "question_id": 4,
+      "part": "B",
+      "question": "Classify sensors as per their role in IoT. Describe any two sensors used in IoT in detail.",
+      "max_marks": 4,
+      "co": 2,
+      "blooms_level": 4,
+      "model_answer": "Sensors in IoT can be classified according to the physical quantity they measure, such as temperature, pressure, light, motion, proximity and humidity. A temperature sensor measures temperature and converts it into an electrical signal that can be processed by an IoT system. A proximity sensor detects the presence or distance of an object without requiring physical contact. Both sensors can provide data to IoT systems for monitoring and automated decision making.",
+      "keywords": [
+        "sensors",
+        "classification",
+        "temperature sensor",
+        "temperature",
+        "proximity sensor",
+        "object detection",
+        "IoT"
+      ]
+    },
+    {
+      "question_id": 5,
+      "part": "B",
+      "question": "Compare TinyOS, and RIOT OS in terms of their: Architecture, Power Efficiency, & Use cases in IoT.",
+      "max_marks": 4,
+      "co": 2,
+      "blooms_level": 4,
+      "model_answer": "TinyOS is a lightweight operating system designed for resource-constrained wireless sensor networks and uses a component-based architecture with an event-driven execution model. It is designed for low-power devices. RIOT OS is also designed for constrained IoT devices but provides a more conventional operating-system environment with support for multithreading and standard programming interfaces. Both are suitable for resource-constrained IoT applications, while their architectures and programming models differ.",
+      "keywords": [
+        "TinyOS",
+        "RIOT OS",
+        "architecture",
+        "component-based",
+        "event-driven",
+        "power efficiency",
+        "low power",
+        "multithreading",
+        "IoT"
+      ]
+    },
+    {
+      "question_id": 6,
+      "part": "C",
+      "question": "Illustrate the architectural constraints of REST.",
+      "max_marks": 6,
+      "co": 3,
+      "blooms_level": 3,
+      "model_answer": "REST defines several architectural constraints for distributed systems. These include client-server separation, stateless communication, cacheable responses, a uniform interface, a layered system and optional code-on-demand. Client-server separation keeps the user interface and data storage concerns independent. Stateless communication requires each request to contain the information necessary to process it. Cacheable responses can be reused to improve performance. A uniform interface provides a consistent way for clients to interact with resources. A layered system allows components to be organized into layers, while code-on-demand is an optional constraint that allows servers to transfer executable code to clients.",
+      "keywords": [
+        "REST",
+        "client-server",
+        "stateless",
+        "cacheable",
+        "uniform interface",
+        "layered system",
+        "code-on-demand"
+      ]
+    },
+    {
+      "question_id": 7,
+      "part": "C",
+      "question": "Illustrate the 4 stages of IoT architecture.",
+      "max_marks": 6,
+      "co": 3,
+      "blooms_level": 3,
+      "model_answer": "A four-stage IoT architecture can be described as sensing, network or data transmission, data processing, and application. The sensing stage collects information from the physical environment using sensors and devices. The network stage transfers the collected data through communication networks. The data processing stage stores, processes and analyzes the collected information. The application stage uses the processed information to provide services, monitoring, control or other useful functionality to users.",
+      "keywords": [
+        "IoT architecture",
+        "sensing",
+        "sensors",
+        "network",
+        "data transmission",
+        "data processing",
+        "application"
+      ]
+    }
+  ]
+}

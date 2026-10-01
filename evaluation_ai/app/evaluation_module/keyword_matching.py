@@ -1,43 +1,106 @@
 import re
 
+from nltk.stem import WordNetLemmatizer
+
 
 class KeywordMatcher:
     """
-    Compares a student's answer with the expected keywords
-    for a particular question.
+    Extracts keyword-based evidence from student answers.
+
+    The matcher normalizes text, tokenizes it, lemmatizes words,
+    and supports both single-word and multi-word keywords.
     """
+
+    def __init__(self):
+        self.lemmatizer = WordNetLemmatizer()
 
     def normalize_text(self, text):
         """
-        Convert text to lowercase and remove punctuation.
+        Normalize text by converting it to lowercase and
+        removing punctuation.
         """
 
-        text = text.lower()
-        text = re.sub(r"[^a-z0-9\s]", "", text)
+        if not isinstance(text, str):
+            return ""
 
-        return text
+        text = text.lower()
+        text = re.sub(r"[^a-z0-9\s]", " ", text)
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
+
+    def lemmatize_text(self, text):
+        """
+        Tokenize and lemmatize normalized text.
+
+        WordNet defaults to noun lemmatization, so common
+        plural forms such as 'sensors' become 'sensor'.
+        """
+
+        normalized_text = self.normalize_text(text)
+
+        if not normalized_text:
+            return []
+
+        tokens = normalized_text.split()
+
+        return [
+            self.lemmatizer.lemmatize(token)
+            for token in tokens
+        ]
+
+    def lemmatize_keyword(self, keyword):
+        """
+        Lemmatize a keyword while preserving its token sequence.
+        """
+
+        return self.lemmatize_text(keyword)
+
+    def keyword_matches(self, answer_tokens, keyword_tokens):
+        """
+        Determine whether a keyword token sequence occurs
+        consecutively within the answer token sequence.
+        """
+
+        if not keyword_tokens:
+            return False
+
+        keyword_length = len(keyword_tokens)
+
+        for index in range(
+            len(answer_tokens) - keyword_length + 1
+        ):
+            if answer_tokens[
+                index:index + keyword_length
+            ] == keyword_tokens:
+                return True
+
+        return False
 
     def find_matched_keywords(self, student_answer, keywords):
         """
-        Find which expected keywords are present in the student's answer.
+        Return keywords whose lemmatized form occurs in
+        the student's answer.
         """
 
-        normalized_answer = self.normalize_text(student_answer)
+        answer_tokens = self.lemmatize_text(student_answer)
 
         matched_keywords = []
 
         for keyword in keywords:
+            keyword_tokens = self.lemmatize_keyword(keyword)
 
-            normalized_keyword = self.normalize_text(keyword)
-
-            if normalized_keyword in normalized_answer:
+            if self.keyword_matches(
+                answer_tokens,
+                keyword_tokens
+            ):
                 matched_keywords.append(keyword)
 
         return matched_keywords
 
     def find_missing_keywords(self, student_answer, keywords):
         """
-        Find which expected keywords are missing from the student's answer.
+        Return keywords that were not found in the student's answer.
         """
 
         matched_keywords = self.find_matched_keywords(
@@ -45,18 +108,15 @@ class KeywordMatcher:
             keywords
         )
 
-        missing_keywords = [
+        return [
             keyword
             for keyword in keywords
             if keyword not in matched_keywords
         ]
 
-        return missing_keywords
-
     def calculate_keyword_score(self, student_answer, keywords):
         """
-        Calculate the percentage of expected keywords
-        found in the student's answer.
+        Calculate the percentage of keywords matched.
         """
 
         if not keywords:
@@ -67,13 +127,15 @@ class KeywordMatcher:
             keywords
         )
 
-        score = (len(matched_keywords) / len(keywords)) * 100
+        score = (
+            len(matched_keywords) / len(keywords)
+        ) * 100
 
         return round(score, 2)
 
     def evaluate(self, student_answer, keywords):
         """
-        Return a complete keyword evaluation result.
+        Return keyword matching evidence for one answer.
         """
 
         matched_keywords = self.find_matched_keywords(
@@ -96,50 +158,3 @@ class KeywordMatcher:
             "missing_keywords": missing_keywords,
             "keyword_score": score
         }
-
-if __name__ == "__main__":
-
-    from dataset import EvaluationDataset
-
-    dataset = EvaluationDataset()
-    matcher = KeywordMatcher()
-
-    question = dataset.get_question("Q001")
-
-    if question is None:
-        print("Question not found.")
-        exit()
-
-    keywords = question["keywords"]
-    student_answers = question["student_answers"]
-
-    print("Question:", question["question"])
-    print("Maximum Marks:", question["max_marks"])
-    print()
-
-    for student in student_answers:
-
-        student_id = student["student_id"]
-        student_answer = student["answer"]
-
-        matched = matcher.find_matched_keywords(
-            student_answer,
-            keywords
-        )
-
-        missing = matcher.find_missing_keywords(
-            student_answer,
-            keywords
-        )
-
-        score = matcher.calculate_keyword_score(
-            student_answer,
-            keywords
-        )
-
-        print("Student ID:", student_id)
-        print("Student Answer:", student_answer)
-        print("Matched Keywords:", matched)
-        print("Missing Keywords:", missing)
-        print("Keyword Match Score:", f"{score}%")
-        print("-" * 60)
