@@ -246,3 +246,74 @@ class ImagePreprocessor:
         stitched = np.vstack(resized_images)
 
         return stitched
+
+    def process(
+        self,
+        image_paths: List[Union[str, Path]],
+        handwriting_mode: bool = True,
+        return_intermediate: bool = False,
+    ) -> Union[np.ndarray, Tuple[np.ndarray, Dict[str, Any]]]:
+        """Execute the complete end-to-end image preprocessing pipeline.
+
+        Args:
+            image_paths: List of file paths to input page images.
+            handwriting_mode: If True, applies CLAHE, morphological closing,
+                and detail-preserving denoising for handwriting.
+            return_intermediate: If True, returns a tuple of (final_image,
+                intermediate_dict) for visual debugging.
+
+        Returns:
+            Preprocessed image as a NumPy array, or (final_image, intermediate_dict)
+            if return_intermediate is True.
+        """
+        # 1. Load images from file paths
+        images = self.load_images(image_paths)
+
+        intermediate = {} if return_intermediate else None
+
+        # 2. Resize each image to target width while preserving aspect ratio
+        resized = [self.resize_image(img) for img in images]
+        if return_intermediate:
+            intermediate['resized'] = resized.copy()
+
+        # 3. Deskew each image to straighten page tilt angle
+        if self.enable_deskew:
+            deskewed = [self.deskew(img) for img in resized]
+            if return_intermediate:
+                intermediate['deskewed'] = deskewed.copy()
+        else:
+            deskewed = resized
+
+        # 4. Vertically stitch multi-page images into one continuous scroll
+        stitched = self.stitch_images(deskewed)
+        if return_intermediate:
+            intermediate['stitched'] = stitched.copy()
+
+        # 5. Convert stitched image to grayscale
+        if len(stitched.shape) == 3:
+            gray = cv2.cvtColor(stitched, cv2.COLOR_BGR2GRAY)
+        else:
+            gray = stitched
+
+        # 6. Apply handwriting contrast enhancement and denoising
+        if handwriting_mode:
+            enhanced = self.enhance_handwriting(gray)
+            if return_intermediate:
+                intermediate['enhanced'] = enhanced.copy()
+
+            # Gentle Non-Local Means denoising to preserve thin pen strokes
+            denoised = self.denoise(enhanced, preserve_detail=True)
+        else:
+            # Standard aggressive median blur denoising for typed text
+            denoised = self.denoise(gray, preserve_detail=False)
+
+        if return_intermediate:
+            intermediate['denoised'] = denoised.copy()
+
+        # 7. Output selection
+        # Returns enhanced grayscale image (TrOCR handles binarization internally)
+        final = denoised
+
+        if return_intermediate:
+            return final, intermediate
+        return final
