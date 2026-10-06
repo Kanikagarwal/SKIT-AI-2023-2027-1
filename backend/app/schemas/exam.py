@@ -12,6 +12,14 @@ class ExamCreateRequest(BaseModel):
     total_marks: int
 
 
+class ExamUpdateRequest(BaseModel):
+    title: str | None = None
+    subject: str | None = None
+    description: str | None = None
+    exam_date: datetime | None = None
+    duration_minutes: int | None = None
+    total_marks: int | None = None
+
 class ExamResponse(BaseModel):
     id: int
     title: str
