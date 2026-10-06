@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from app.models.exam import ExamStatus
 from app.core.database import get_db
 from app.middleware.auth import require_role
 from app.models.user import User, UserRole
@@ -10,11 +10,13 @@ from app.schemas.exam import (
     ExamUpdateRequest,
     ExamResponse
 )
+
 from app.services.exam_service import (
     create_exam,
     get_all_exams,
     get_exam_by_id,
-    update_exam
+    update_exam,
+    delete_exam
 )
 
 router = APIRouter(
@@ -142,3 +144,39 @@ def create_new_exam(
     )
 
     return exam
+
+
+@router.delete(
+    "/{exam_id}",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_existing_exam(
+    exam_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    exam = get_exam_by_id(
+        db,
+        exam_id
+    )
+
+    if exam is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Exam not found"
+        )
+
+    if exam.status != ExamStatus.DRAFT:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only draft exams can be deleted"
+        )
+
+    delete_exam(
+        db,
+        exam
+    )
+
+    return None
