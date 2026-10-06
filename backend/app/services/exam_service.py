@@ -75,3 +75,11 @@ def update_exam(
     db.refresh(exam)
 
     return exam
+
+
+def delete_exam(
+    db: Session,
+    exam: Exam
+):
+    db.delete(exam)
+    db.commit()
