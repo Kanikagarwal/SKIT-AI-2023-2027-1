@@ -47,3 +47,31 @@ def get_exam_by_id(
         .filter(Exam.id == exam_id)
         .first()
     )
+
+def update_exam(
+    db: Session,
+    exam: Exam,
+    exam_data
+):
+    if exam_data.title is not None:
+        exam.title = exam_data.title
+
+    if exam_data.subject is not None:
+        exam.subject = exam_data.subject
+
+    if exam_data.description is not None:
+        exam.description = exam_data.description
+
+    if exam_data.exam_date is not None:
+        exam.exam_date = exam_data.exam_date
+
+    if exam_data.duration_minutes is not None:
+        exam.duration_minutes = exam_data.duration_minutes
+
+    if exam_data.total_marks is not None:
+        exam.total_marks = exam_data.total_marks
+
+    db.commit()
+    db.refresh(exam)
+
+    return exam
