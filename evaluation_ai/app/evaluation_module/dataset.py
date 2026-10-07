@@ -93,8 +93,7 @@ class EvaluationDataLoader:
                 "part",
                 "question",
                 "max_marks",
-                "model_answer",
-                "keywords"
+                "model_answer"
             ]
 
             for field in required_question_fields:
@@ -112,11 +111,6 @@ class EvaluationDataLoader:
 
             question_ids.add(question_id)
 
-            if not isinstance(question["keywords"], list):
-                raise ValueError(
-                    f"Keywords for question {question_id} "
-                    "must be a list."
-                )
 
     def _validate_student_submission(self, submission):
         """Validate the structure of one student submission."""
@@ -238,13 +232,18 @@ class EvaluationDataLoader:
         return None
 
     def get_keywords(self, question_id):
-        """Return the keywords for a question."""
-        question = self.get_question(question_id)
+        """Return automatically extracted keywords for a question."""
+        from evaluation_ai.app.evaluation_module.keyword_extraction import (
+            KeywordExtractor
+        )
 
-        if question:
-            return question.get("keywords", [])
+        model_answer = self.get_model_answer(question_id)
 
-        return []
+        if not model_answer:
+            return []
+
+        extractor = KeywordExtractor()
+        return extractor.extract(model_answer)
 
     def get_max_marks(self, question_id):
         """Return the maximum marks for a question."""
