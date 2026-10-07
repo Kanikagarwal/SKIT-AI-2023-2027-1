@@ -3,38 +3,30 @@ import { Link } from "react-router-dom"
 function TeacherDashboard() {
   return (
     <div className="min-h-screen bg-slate-50">
-
       <main className="min-h-screen overflow-hidden">
-
-        <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-7">
-
+        <header className="min-h-16 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-7 py-4">
           <div>
             <h1 className="text-lg font-bold text-slate-900">
               Teacher Dashboard
             </h1>
 
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-400 mt-1">
               Overview of your theory evaluation activities
             </p>
           </div>
 
           <Link
             to="/new-evaluation"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+            className="w-fit bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
           >
             + New Evaluation
           </Link>
-
         </header>
 
-        <div className="p-7">
-
-          <div className="grid grid-cols-4 gap-4 mb-5">
-
+        <div className="p-4 sm:p-7">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <p className="text-xs text-slate-500">
-                Total Evaluations
-              </p>
+              <p className="text-xs text-slate-500">Total Evaluations</p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
                 128
@@ -46,9 +38,7 @@ function TeacherDashboard() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <p className="text-xs text-slate-500">
-                Answer Sheets
-              </p>
+              <p className="text-xs text-slate-500">Answer Sheets</p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
                 486
@@ -60,9 +50,7 @@ function TeacherDashboard() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <p className="text-xs text-slate-500">
-                Completed
-              </p>
+              <p className="text-xs text-slate-500">Completed</p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
                 100
@@ -74,9 +62,7 @@ function TeacherDashboard() {
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-4">
-              <p className="text-xs text-slate-500">
-                Pending Review
-              </p>
+              <p className="text-xs text-slate-500">Pending Review</p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
                 14
@@ -86,15 +72,11 @@ function TeacherDashboard() {
                 Needs attention
               </p>
             </div>
-
           </div>
 
-          <div className="grid grid-cols-3 gap-5">
-
-            <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5">
-
-              <div className="flex items-center justify-between mb-5">
-
+          <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+            <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">
                     Evaluation Overview
@@ -111,11 +93,9 @@ function TeacherDashboard() {
                 >
                   View all
                 </Link>
-
               </div>
 
               <div className="space-y-4">
-
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-xs text-slate-600">
@@ -128,7 +108,7 @@ function TeacherDashboard() {
                   </div>
 
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[78%] rounded-full"></div>
+                    <div className="h-full bg-emerald-500 w-[78%] rounded-full" />
                   </div>
                 </div>
 
@@ -144,7 +124,7 @@ function TeacherDashboard() {
                   </div>
 
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 w-[11%] rounded-full"></div>
+                    <div className="h-full bg-blue-500 w-[11%] rounded-full" />
                   </div>
                 </div>
 
@@ -160,16 +140,13 @@ function TeacherDashboard() {
                   </div>
 
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 w-[11%] rounded-full"></div>
+                    <div className="h-full bg-amber-500 w-[11%] rounded-full" />
                   </div>
                 </div>
-
               </div>
-
             </div>
 
             <div className="bg-white border border-slate-200 rounded-xl p-5">
-
               <h2 className="text-sm font-bold text-slate-900">
                 Quick Actions
               </h2>
@@ -179,38 +156,32 @@ function TeacherDashboard() {
               </p>
 
               <div className="space-y-2">
-
                 <Link
                   to="/new-evaluation"
-                  className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                 >
                   + Create Evaluation
                 </Link>
 
                 <Link
                   to="/answer-sheets"
-                  className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                 >
                   ↑ Upload Answer Sheets
                 </Link>
 
                 <Link
                   to="/evaluations"
-                  className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                 >
                   View Evaluations
                 </Link>
-
               </div>
-
             </div>
-
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl mt-5">
-
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-
+            <div className="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
                   Recent Evaluations
@@ -227,11 +198,9 @@ function TeacherDashboard() {
               >
                 View all
               </Link>
-
             </div>
 
-            <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100">
-
+            <div className="px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100">
               <div>
                 <p className="text-xs font-semibold text-slate-700">
                   Data Structures - Mid Term
@@ -242,14 +211,12 @@ function TeacherDashboard() {
                 </p>
               </div>
 
-              <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
+              <span className="w-fit text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
                 Completed
               </span>
-
             </div>
 
-            <div className="px-5 py-3 flex items-center justify-between">
-
+            <div className="px-5 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
               <div>
                 <p className="text-xs font-semibold text-slate-700">
                   Operating Systems - Unit Test
@@ -260,18 +227,13 @@ function TeacherDashboard() {
                 </p>
               </div>
 
-              <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md">
+              <span className="w-fit text-[10px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md">
                 In Review
               </span>
-
             </div>
-
           </div>
-
         </div>
-
       </main>
-
     </div>
   )
 }

@@ -9,21 +9,18 @@ function StudentDashboard() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-7">
-
+      <header className="min-h-14 bg-white border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 sm:px-7 py-3">
         <div>
           <h1 className="text-lg font-bold text-slate-900">
             Student Dashboard
           </h1>
 
-          <p className="text-[11px] text-slate-400">
+          <p className="text-[11px] text-slate-400 mt-1">
             Track your theory evaluations and academic performance
           </p>
         </div>
 
-        <div className="flex items-center gap-4">
-
+        <div className="flex items-center gap-3 sm:gap-4">
           <div className="text-right">
             <p className="text-xs font-semibold text-slate-700">
               Anshu Dhattarwal
@@ -45,15 +42,11 @@ function StudentDashboard() {
           >
             Logout
           </button>
-
         </div>
-
       </header>
 
-      <main className="p-7">
-
-        <div className="grid grid-cols-4 gap-4 mb-5">
-
+      <main className="p-4 sm:p-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-5">
           <div className="bg-white border border-slate-200 rounded-xl p-4">
             <p className="text-xs text-slate-500">
               Total Evaluations
@@ -109,15 +102,11 @@ function StudentDashboard() {
               Awaiting evaluation
             </p>
           </div>
-
         </div>
 
-        <div className="grid grid-cols-3 gap-5">
-
-          <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5">
-
-            <div className="flex items-center justify-between mb-5">
-
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+          <div className="xl:col-span-2 bg-white border border-slate-200 rounded-xl p-5">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-5">
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
                   Recent Evaluations
@@ -134,13 +123,10 @@ function StudentDashboard() {
               >
                 View all
               </Link>
-
             </div>
 
             <div className="space-y-3">
-
-              <div className="border border-slate-100 rounded-lg px-4 py-3 flex items-center justify-between">
-
+              <div className="border border-slate-100 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-700">
                     Data Structures - Mid Term
@@ -151,8 +137,7 @@ function StudentDashboard() {
                   </p>
                 </div>
 
-                <div className="text-right">
-
+                <div className="text-left sm:text-right">
                   <p className="text-sm font-bold text-slate-800">
                     82%
                   </p>
@@ -160,13 +145,10 @@ function StudentDashboard() {
                   <span className="text-[10px] font-semibold text-emerald-600">
                     Evaluated
                   </span>
-
                 </div>
-
               </div>
 
-              <div className="border border-slate-100 rounded-lg px-4 py-3 flex items-center justify-between">
-
+              <div className="border border-slate-100 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-700">
                     Operating Systems - Unit Test
@@ -177,8 +159,7 @@ function StudentDashboard() {
                   </p>
                 </div>
 
-                <div className="text-right">
-
+                <div className="text-left sm:text-right">
                   <p className="text-sm font-bold text-slate-800">
                     78%
                   </p>
@@ -186,13 +167,10 @@ function StudentDashboard() {
                   <span className="text-[10px] font-semibold text-emerald-600">
                     Evaluated
                   </span>
-
                 </div>
-
               </div>
 
-              <div className="border border-slate-100 rounded-lg px-4 py-3 flex items-center justify-between">
-
+              <div className="border border-slate-100 rounded-lg px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div>
                   <p className="text-xs font-semibold text-slate-700">
                     Computer Networks - Assignment
@@ -203,8 +181,7 @@ function StudentDashboard() {
                   </p>
                 </div>
 
-                <div className="text-right">
-
+                <div className="text-left sm:text-right">
                   <p className="text-sm font-bold text-slate-800">
                     85%
                   </p>
@@ -212,17 +189,12 @@ function StudentDashboard() {
                   <span className="text-[10px] font-semibold text-emerald-600">
                     Evaluated
                   </span>
-
                 </div>
-
               </div>
-
             </div>
-
           </div>
 
           <div className="bg-white border border-slate-200 rounded-xl p-5">
-
             <h2 className="text-sm font-bold text-slate-900">
               Quick Actions
             </h2>
@@ -232,38 +204,32 @@ function StudentDashboard() {
             </p>
 
             <div className="space-y-2">
-
               <Link
                 to="/student-evaluations"
-                className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
               >
                 View My Evaluations
               </Link>
 
               <Link
                 to="/student-answer-sheets"
-                className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
               >
                 View Answer Sheets
               </Link>
 
               <Link
                 to="/student-profile"
-                className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                className="block w-full border border-slate-200 rounded-lg px-3 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
               >
                 View Profile
               </Link>
-
             </div>
-
           </div>
-
         </div>
 
         <div className="bg-white border border-slate-200 rounded-xl mt-5 p-5">
-
-          <div className="flex items-center justify-between">
-
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <h2 className="text-sm font-bold text-slate-900">
                 Performance Overview
@@ -274,16 +240,13 @@ function StudentDashboard() {
               </p>
             </div>
 
-            <span className="text-xs font-semibold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-md">
+            <span className="w-fit text-xs font-semibold bg-blue-50 text-blue-600 px-3 py-1.5 rounded-md">
               Average: 82%
             </span>
-
           </div>
 
           <div className="mt-5">
-
             <div className="flex items-center justify-between mb-1">
-
               <span className="text-xs text-slate-600">
                 Overall Performance
               </span>
@@ -291,19 +254,14 @@ function StudentDashboard() {
               <span className="text-xs font-semibold text-slate-700">
                 82%
               </span>
-
             </div>
 
             <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div className="h-full bg-blue-500 w-[82%] rounded-full"></div>
+              <div className="h-full bg-blue-500 w-[82%] rounded-full" />
             </div>
-
           </div>
-
         </div>
-
       </main>
-
     </div>
   )
 }
