@@ -1,3 +1,6 @@
+from evaluation_ai.app.evaluation_module.keyword_extraction import (
+    KeywordExtractor
+)
 from evaluation_ai.app.evaluation_module.keyword_matching import KeywordMatcher
 from evaluation_ai.app.evaluation_module.semantic_similarity import (
     SemanticSimilarity
@@ -17,6 +20,7 @@ class AnswerEvaluator:
 
     def __init__(self, answer_key=None):
         self.keyword_matcher = KeywordMatcher()
+        self.keyword_extractor = KeywordExtractor()
         self.semantic_similarity = SemanticSimilarity()
 
         if answer_key is not None:
@@ -32,7 +36,9 @@ class AnswerEvaluator:
         if student_answer is None:
             student_answer = ""
 
-        keywords = question.get("keywords", [])
+        keywords = self.keyword_extractor.extract(
+            question.get("model_answer", "")
+        )
         question_id = question.get("question_id")
 
         keyword_result = self.keyword_matcher.evaluate(
