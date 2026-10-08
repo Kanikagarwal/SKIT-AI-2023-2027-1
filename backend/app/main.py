@@ -6,6 +6,7 @@ from app.core.database import Base, engine
 from app.api.routes.users import router as users_router
 from fastapi.middleware.cors import CORSMiddleware
 from app.models.exam import Exam
+from app.models.answer_sheet import AnswerSheet
 from app.api.routes.exams import router as exams_router
 
 Base.metadata.create_all(bind=engine)
