@@ -185,7 +185,7 @@ function Login() {
             </div>
           </div>
 
-          <p className="text-center text-xs text-slate-500">
+          {/* <p className="text-center text-xs text-slate-500">
             Don't have an account?{" "}
             <Link
               to="/register"
@@ -193,7 +193,7 @@ function Login() {
             >
               Create account
             </Link>
-          </p>
+          </p> */}
 
         </div>
 
