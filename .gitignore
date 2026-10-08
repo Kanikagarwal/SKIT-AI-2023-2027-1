@@ -28,3 +28,25 @@ __pycache__/
 *.pyc
 venv/
 uploads/*
+
+# Python environments
+venv/
+trocr-venv/
+dan-venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Generated OCR / segmentation files
+data/outputs/
+
+# Raw datasets
+data/raw/
+
+# Model files
+*.pt
+*.pth
+*.bin
+*.safetensors
+checkpoints/
