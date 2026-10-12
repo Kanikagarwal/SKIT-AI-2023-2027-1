@@ -1,11 +1,13 @@
 
+import json
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-import json
 
 from app.core.database import get_db
 from app.middleware.auth import require_role
 from app.models.user import User, UserRole
+from app.models.exam import Exam
 from app.models.answer_sheet import AnswerSheet
 from app.schemas.answer_sheet import OCRResultRequest
 
@@ -27,7 +29,7 @@ def receive_ocr_result(
         require_role(UserRole.ADMIN)
     )
 ):
-    # Check whether the student exists
+    # Check that the student exists
     student = (
         db.query(User)
         .filter(
@@ -43,9 +45,7 @@ def receive_ocr_result(
             detail="Student not found"
         )
 
-    # Check whether the exam exists
-    from app.models.exam import Exam
-
+    # Check that the exam exists
     exam = (
         db.query(Exam)
         .filter(Exam.id == data.exam_id)
@@ -58,14 +58,12 @@ def receive_ocr_result(
             detail="Exam not found"
         )
 
-    # Save OCR data in the database
+    # Save OCR result
     answer_sheet = AnswerSheet(
         student_id=data.student_id,
         exam_id=data.exam_id,
         ocr_status="COMPLETED",
-        ocr_result=json.dumps(
-            data.model_dump()
-        )
+        ocr_result=json.dumps(data.model_dump())
     )
 
     db.add(answer_sheet)
