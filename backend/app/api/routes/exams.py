@@ -144,8 +144,6 @@ def create_new_exam(
     )
 
     return exam
-
-
 @router.delete(
     "/{exam_id}",
     status_code=status.HTTP_204_NO_CONTENT

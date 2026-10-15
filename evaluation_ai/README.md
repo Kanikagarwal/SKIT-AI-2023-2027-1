@@ -36,45 +36,48 @@ The module is being developed incrementally according to the project timeline.
 
 Work completed:
 
-- Created the evaluation dataset containing questions, model answers, student answers, keywords and maximum marks.
+- Created the evaluation dataset containing questions, model answers, student answers and maximum marks.
 - Implemented dataset loading.
 - Implemented question retrieval.
 - Implemented model answer retrieval.
-- Implemented keyword retrieval.
 - Implemented student answer retrieval.
+- Designed the dataset to support automatic keyword extraction instead of manually storing keywords.
 
 ### September - Answer Evaluation
 
-#### Milestone 1 - Keyword Matching
+#### Milestone 1 - Keyword Extraction and Matching
 
 Work completed:
 
+- Implemented automatic keyword extraction from model answers using YAKE.
+- Compared YAKE and RAKE during development.
+- Selected YAKE based on the quality and relevance of extracted keyphrases from the project model answers.
+- Added filtering to remove noisy and irrelevant extracted phrases.
+- Integrated automatically extracted keywords with the keyword matching component.
 - Implemented text normalization.
-- Implemented basic keyword matching.
 - Implemented matched keyword identification.
 - Implemented missing keyword identification.
 - Implemented keyword match percentage calculation.
 - Implemented a complete keyword evaluation result.
+- Removed the dependency on manually written keywords from the model answer dataset.
 - Added automated tests using `pytest`.
-- Verified the keyword matching functionality using the existing evaluation dataset.
-- All current keyword matching tests pass successfully.
+- Verified YAKE extraction and dataset loading successfully.
 
 #### Milestone 2 - Semantic Similarity
 
-Current work:
+Work completed:
 
 - Added the `sentence-transformers` dependency for semantic similarity processing.
-- Added a module-specific `requirements.txt` file.
-- Semantic similarity implementation is currently in progress.
+- Integrated semantic similarity with the answer evaluation module.
+- Model answers are cached and used for comparison with student answers.
 
 ### Current Status
 
-**In Progress**
+**September Answer Evaluation - Completed**
 
-The keyword matching component has been implemented and tested.
+The answer evaluation module now uses automatically extracted YAKE keyphrases for keyword-based evaluation and semantic similarity for semantic evaluation.
 
-The semantic similarity component is currently under development. After semantic similarity is implemented, the keyword-based and semantic evaluation methods will be combined as part of the remaining September Answer Evaluation work.
-
+The two evaluation signals can be used together for further scoring and evaluation criteria development.
 ---
 
 ## 3. Testing
