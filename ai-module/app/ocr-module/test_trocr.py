@@ -1,124 +1,85 @@
-from datasets import load_dataset
-from ocr_engine import OCREngine
-from preprocessing import preprocess_image
-import re
-import csv
-import Levenshtein
+
+from pathlib import Path
+
+import torch
+from PIL import Image
+from transformers import TrOCRProcessor, VisionEncoderDecoderModel
 
 
-def normalize_text(text):
-    text = text.lower()
-    text = re.sub(r"\s+", " ", text)
-    return text.strip()
+# Polygon-based line crops created by DBNet
+
+CROP_DIR = Path(
+    r"C:\Users\Lenovo\Desktop\EvalAI\ai-module\data\outputs\exam_test\Student_1\page_03_dbnet_lines"
+)
+
+OUTPUT_FILE = CROP_DIR / "trocr_results.txt"
 
 
-def calculate_cer(reference, prediction):
-    reference = normalize_text(reference)
-    prediction = normalize_text(prediction)
-
-    if len(reference) == 0:
-        return 0.0
-
-    return Levenshtein.distance(reference, prediction) / len(reference)
+MODEL_NAME = "microsoft/trocr-base-handwritten"
 
 
-def calculate_wer(reference, prediction):
-    reference = normalize_text(reference).split()
-    prediction = normalize_text(prediction).split()
+def main():
+    if not CROP_DIR.exists():
+        raise FileNotFoundError(f"Crop folder not found: {CROP_DIR}")
 
-    if len(reference) == 0:
-        return 0.0
+    crop_paths = sorted(CROP_DIR.glob("line_*.png"))
 
-    return Levenshtein.distance(reference, prediction) / len(reference)
+    if not crop_paths:
+        raise FileNotFoundError(
+            f"No line crops found in {CROP_DIR}"
+        )
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"Device: {device}")
+    print(f"Number of crops: {len(crop_paths)}")
+    print(f"Loading model: {MODEL_NAME}")
 
-print("Loading IAM dataset...")
+    processor = TrOCRProcessor.from_pretrained(MODEL_NAME)
+    model = VisionEncoderDecoderModel.from_pretrained(MODEL_NAME)
+    model.to(device)
+    model.eval()
 
-dataset = load_dataset("Teklia/IAM-line")
+    results = []
 
-# Only 20 samples for now
-test_dataset = dataset["test"].select(range(20))
+    for index, crop_path in enumerate(crop_paths, start=1):
+        try:
+            image = Image.open(crop_path).convert("RGB")
+            pixel_values = processor(
+                images=image,
+                return_tensors="pt"
+            ).pixel_values.to(device)
 
-print("Test samples:", len(test_dataset))
+            with torch.inference_mode():
+                generated_ids = model.generate(
+                    pixel_values,
+                    max_new_tokens=128
+                )
 
+            text = processor.batch_decode(
+                generated_ids,
+                skip_special_tokens=True
+            )[0]
 
-print("\nLoading TrOCR...")
-ocr = OCREngine()
+            results.append(
+                f"{crop_path.name}\n{text}\n"
+            )
 
-total_cer = 0
-total_wer = 0
+            print(f"\n[{index}/{len(crop_paths)}] {crop_path.name}")
+            print(f"Recognized text: {text}")
 
-results = []
+        except Exception as error:
+            print(f"\nError processing {crop_path.name}: {error}")
+            results.append(
+                f"{crop_path.name}\n[ERROR: {error}]\n"
+            )
 
-print("\nStarting evaluation...\n")
-
-
-for i, sample in enumerate(test_dataset):
-
-    image = sample["image"]
-    ground_truth = sample["text"]
-
-    processed_image = preprocess_image(image)
-
-    prediction = ocr.predict(processed_image)
-
-    cer = calculate_cer(
-        ground_truth,
-        prediction
+    OUTPUT_FILE.write_text(
+        "\n".join(results),
+        encoding="utf-8"
     )
 
-    wer = calculate_wer(
-        ground_truth,
-        prediction
-    )
-
-    total_cer += cer
-    total_wer += wer
-
-    results.append({
-        "index": i,
-        "ground_truth": ground_truth,
-        "prediction": prediction,
-        "cer": cer,
-        "wer": wer
-    })
-
-    print(f"\nSample {i + 1}/20")
-    print("Ground truth :", ground_truth)
-    print("Prediction   :", prediction)
-    print(f"CER          : {cer:.4f}")
-    print(f"WER          : {wer:.4f}")
+    print(f"\nResults saved to: {OUTPUT_FILE}")
 
 
-average_cer = total_cer / len(test_dataset)
-average_wer = total_wer / len(test_dataset)
-
-
-with open(
-    "trocr_iam_20_predictions.csv",
-    "w",
-    newline="",
-    encoding="utf-8"
-) as file:
-
-    writer = csv.DictWriter(
-        file,
-        fieldnames=[
-            "index",
-            "ground_truth",
-            "prediction",
-            "cer",
-            "wer"
-        ]
-    )
-
-    writer.writeheader()
-    writer.writerows(results)
-
-
-print("\n========== FINAL RESULTS ==========")
-print(f"Test samples: {len(test_dataset)}")
-print(f"Average CER: {average_cer:.4f}")
-print(f"Average WER: {average_wer:.4f}")
-print("Saved: trocr_iam_20_predictions.csv")
-print("===================================")
+if __name__ == "__main__":
+    main()
