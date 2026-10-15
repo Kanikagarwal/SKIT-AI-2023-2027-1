@@ -60,204 +60,324 @@ function Evaluations() {
     return matchesSearch && matchesStatus
   })
 
-  return (
-    <div className="min-h-screen bg-slate-50">
+  const completedCount = evaluations.filter(
+    (item) => item.status === "Completed"
+  ).length
 
-      <header className="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-7">
+  const pendingCount = evaluations.filter(
+    (item) => item.status === "Pending" || item.status === "In Review"
+  ).length
+
+  const getStatusStyle = (status) => {
+    if (status === "Completed") {
+      return "border border-emerald-400/20 bg-emerald-400/10 text-emerald-300"
+    }
+
+    if (status === "In Review") {
+      return "border border-blue-400/20 bg-blue-400/10 text-blue-300"
+    }
+
+    return "border border-amber-400/20 bg-amber-400/10 text-amber-300"
+  }
+
+  return (
+    <div className="min-h-screen bg-[#080D19] text-slate-100">
+
+      {/* Header */}
+      <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#0B1220]/95 px-5 py-4 backdrop-blur-xl sm:px-8">
 
         <div>
-          <h1 className="text-lg font-bold text-slate-900">
+          <p className="text-xs font-semibold tracking-[2px] text-blue-400">
+            EVALAI / WORKSPACE
+          </p>
+
+          <h1 className="mt-1 text-xl font-bold text-white">
             Evaluations
           </h1>
 
-          <p className="text-[11px] text-slate-400">
+          <p className="mt-1 text-xs text-slate-400">
             Manage and review your answer sheet evaluations
           </p>
         </div>
 
         <Link
           to="/new-evaluation"
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+          style={{ backgroundColor: "#3B82F6" }}
+          onMouseEnter={(e) =>
+            (e.currentTarget.style.backgroundColor = "#2563EB")
+          }
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.backgroundColor = "#3B82F6")
+          }
+          className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-950/40 transition hover:-translate-y-0.5"
         >
-          + New Evaluation
+          <span className="text-lg">+</span>
+          New Evaluation
         </Link>
 
       </header>
 
-      <main className="p-7">
+      <main className="mx-auto max-w-[1500px] space-y-7 p-5 sm:p-8">
 
-        <div className="flex items-center justify-between mb-5">
+        {/* Page Heading and Filters */}
+        <section className="flex flex-col justify-between gap-5 xl:flex-row xl:items-end">
 
           <div>
-            <h2 className="text-xl font-bold text-slate-900">
+            <h2 className="text-xl font-bold text-white">
               All Evaluations
             </h2>
 
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="mt-1 text-sm text-slate-400">
               Track the progress of your theory answer evaluations.
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-3 sm:flex-row">
 
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search evaluations..."
-              className="w-56 border border-slate-200 rounded-lg px-3 py-2 text-xs outline-none bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-            />
+            {/* Search */}
+            <div className="relative">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="m16 16 4 4" />
+              </svg>
 
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search evaluations..."
+                className="w-full rounded-xl border border-white/10 bg-[#111B2D] py-3 pl-10 pr-4 text-xs text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/10 sm:w-64"
+              />
+            </div>
+
+            {/* Status Filter */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600 outline-none bg-white focus:border-blue-500"
+              className="rounded-xl border border-white/10 bg-[#111B2D] px-4 py-3 text-xs text-slate-300 outline-none transition focus:border-blue-400/50"
             >
-              <option>All status</option>
-              <option>Completed</option>
-              <option>In Review</option>
-              <option>Pending</option>
+              <option value="All status">All status</option>
+              <option value="Completed">Completed</option>
+              <option value="In Review">In Review</option>
+              <option value="Pending">Pending</option>
             </select>
 
           </div>
+        </section>
 
-        </div>
+        {/* Statistics */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
 
-        <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="rounded-2xl border border-white/10 bg-[#111B2D] p-5 transition hover:border-blue-400/30">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-400">
+                Total Evaluations
+              </p>
 
-          <div className="bg-white border border-slate-200 rounded-xl p-4">
-            <p className="text-xs text-slate-500">
-              Total Evaluations
-            </p>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-400/10 text-xl text-blue-300">
+                ▤
+              </span>
+            </div>
 
-            <p className="text-2xl font-bold text-slate-900 mt-2">
-              128
-            </p>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-4">
-            <p className="text-xs text-slate-500">
-              Completed
-            </p>
-
-            <p className="text-2xl font-bold text-slate-900 mt-2">
-              100
-            </p>
-          </div>
-
-          <div className="bg-white border border-slate-200 rounded-xl p-4">
-            <p className="text-xs text-slate-500">
-              Pending Review
-            </p>
-
-            <p className="text-2xl font-bold text-slate-900 mt-2">
-              14
-            </p>
-          </div>
-
-        </div>
-
-        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-
-          <div className="px-5 py-4 border-b border-slate-200">
-
-            <h3 className="text-sm font-bold text-slate-900">
-              Evaluation History
+            <h3 className="mt-4 text-3xl font-bold text-white">
+              {evaluations.length}
             </h3>
 
-            <p className="text-[10px] text-slate-400 mt-0.5">
-              Recent and previous evaluation records
+            <p className="mt-2 text-xs text-blue-300">
+              All examination records
             </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#111B2D] p-5 transition hover:border-emerald-400/30">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-400">
+                Completed
+              </p>
+
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 text-xl text-emerald-300">
+                ✓
+              </span>
+            </div>
+
+            <h3 className="mt-4 text-3xl font-bold text-white">
+              {completedCount}
+            </h3>
+
+            <p className="mt-2 text-xs text-emerald-300">
+              Successfully evaluated
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-white/10 bg-[#111B2D] p-5 transition hover:border-amber-400/30">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-medium text-slate-400">
+                Pending Review
+              </p>
+
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-400/10 text-xl text-amber-300">
+                ◷
+              </span>
+            </div>
+
+            <h3 className="mt-4 text-3xl font-bold text-white">
+              {pendingCount}
+            </h3>
+
+            <p className="mt-2 text-xs text-amber-300">
+              Requires attention
+            </p>
+          </div>
+
+        </section>
+
+        {/* Evaluation History */}
+        <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#111B2D]">
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-6 py-5">
+
+            <div>
+              <h3 className="text-lg font-bold text-white">
+                Evaluation History
+              </h3>
+
+              <p className="mt-1 text-xs text-slate-400">
+                Recent and previous evaluation records
+              </p>
+            </div>
+
+            <span className="rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-300">
+              {filteredEvaluations.length} Records
+            </span>
 
           </div>
 
-          <div>
+          {/* Table */}
+          <div className="overflow-x-auto">
 
-            {filteredEvaluations.length > 0 ? (
-              filteredEvaluations.map((evaluation, index) => (
-                <div
-                  key={`${evaluation.title}-${index}`}
-                  className="px-5 py-4 border-b border-slate-100 last:border-b-0 flex items-center justify-between hover:bg-slate-50 transition"
-                >
+            <table className="w-full min-w-[750px] text-left">
 
-                  <div className="w-[38%]">
-                    <p className="text-sm font-semibold text-slate-800">
-                      {evaluation.title}
-                    </p>
+              <thead className="bg-white/[0.03]">
+                <tr className="text-[11px] uppercase tracking-wider text-slate-400">
 
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      {evaluation.subject}
-                    </p>
-                  </div>
+                  <th className="px-6 py-4 font-semibold">
+                    Examination
+                  </th>
 
-                  <div className="w-[13%]">
-                    <p className="text-[10px] text-slate-400">
-                      Students
-                    </p>
+                  <th className="px-6 py-4 font-semibold">
+                    Students
+                  </th>
 
-                    <p className="text-xs font-semibold text-slate-700 mt-1">
-                      {evaluation.students}
-                    </p>
-                  </div>
+                  <th className="px-6 py-4 font-semibold">
+                    Status
+                  </th>
 
-                  <div className="w-[17%]">
-                    <span
-                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-md ${
-                        evaluation.status === "Completed"
-                          ? "bg-emerald-50 text-emerald-700"
-                          : evaluation.status === "In Review"
-                          ? "bg-blue-50 text-blue-700"
-                          : "bg-amber-50 text-amber-700"
-                      }`}
+                  <th className="px-6 py-4 font-semibold">
+                    Avg. Score
+                  </th>
+
+                  <th className="px-6 py-4 font-semibold">
+                    Date
+                  </th>
+
+                  <th className="px-6 py-4 font-semibold">
+                    Action
+                  </th>
+
+                </tr>
+              </thead>
+
+              <tbody>
+
+                {filteredEvaluations.length > 0 ? (
+                  filteredEvaluations.map((evaluation, index) => (
+
+                    <tr
+                      key={`${evaluation.title}-${index}`}
+                      className="border-t border-white/5 transition hover:bg-white/[0.03]"
                     >
-                      {evaluation.status}
-                    </span>
-                  </div>
 
-                  <div className="w-[12%]">
-                    <p className="text-[10px] text-slate-400">
-                      Avg. Score
-                    </p>
+                      <td className="px-6 py-5">
+                        <p className="text-sm font-semibold text-white">
+                          {evaluation.title}
+                        </p>
 
-                    <p className="text-sm font-bold text-slate-800 mt-1">
-                      {evaluation.score}
-                    </p>
-                  </div>
+                        <p className="mt-1 text-xs text-slate-400">
+                          {evaluation.subject}
+                        </p>
+                      </td>
 
-                  <div className="w-[15%]">
-                    <p className="text-[10px] text-slate-400">
-                      Date
-                    </p>
+                      <td className="px-6 py-5 text-sm text-slate-300">
+                        {evaluation.students}
+                      </td>
 
-                    <p className="text-xs text-slate-600 mt-1">
-                      {evaluation.date}
-                    </p>
-                  </div>
+                      <td className="px-6 py-5">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1.5 text-xs font-semibold ${getStatusStyle(
+                            evaluation.status
+                          )}`}
+                        >
+                          {evaluation.status}
+                        </span>
+                      </td>
 
-                  <button className="text-xs font-semibold text-blue-600 hover:text-blue-700">
-                    View
-                  </button>
+                      <td className="px-6 py-5 text-sm font-bold text-white">
+                        {evaluation.score}
+                      </td>
 
-                </div>
-              ))
-            ) : (
-              <div className="px-5 py-12 text-center">
-                <p className="text-sm font-semibold text-slate-700">
-                  No evaluations found
-                </p>
+                      <td className="px-6 py-5 text-sm text-slate-400">
+                        {evaluation.date}
+                      </td>
 
-                <p className="text-xs text-slate-400 mt-1">
-                  Try changing your search or status filter.
-                </p>
-              </div>
-            )}
+                      <td className="px-6 py-5">
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-blue-400 transition hover:text-blue-300"
+                        >
+                          View →
+                        </button>
+                      </td>
 
+                    </tr>
+                  ))
+                ) : (
+
+                  <tr>
+                    <td colSpan="6" className="px-6 py-14 text-center">
+
+                      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-white/5 text-2xl text-slate-500">
+                        ⌕
+                      </div>
+
+                      <p className="mt-4 text-sm font-semibold text-white">
+                        No evaluations found
+                      </p>
+
+                      <p className="mt-1 text-xs text-slate-400">
+                        Try changing your search or status filter.
+                      </p>
+
+                    </td>
+                  </tr>
+
+                )}
+
+              </tbody>
+            </table>
           </div>
+        </section>
 
-        </div>
+        {/* Footer */}
+        <footer className="pb-3 text-center text-xs text-slate-500">
+          EvalAI · AI Based Theory Answer Sheet Evaluation
+        </footer>
 
       </main>
-
     </div>
   )
 }

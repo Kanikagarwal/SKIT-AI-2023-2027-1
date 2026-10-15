@@ -20,7 +20,7 @@ function NewEvaluation() {
       return
     }
 
-    if (totalMarks <= 0) {
+    if (Number(totalMarks) <= 0) {
       setError("Total marks must be greater than 0.")
       return
     }
@@ -28,6 +28,10 @@ function NewEvaluation() {
     const newEvaluation = {
       title,
       subject,
+      className,
+      totalMarks: Number(totalMarks),
+      rubric,
+      questionPaperName: questionPaper?.name || "",
       students: 0,
       status: "Pending",
       score: "—",
@@ -49,36 +53,60 @@ function NewEvaluation() {
     navigate("/evaluations")
   }
 
-  return (
-    <div className="min-h-screen bg-slate-50 px-6 py-8">
-      <div className="max-w-3xl mx-auto">
+  const inputStyle =
+    "w-full rounded-xl border border-white/10 bg-[#0B1220] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-blue-400/50 focus:ring-2 focus:ring-blue-400/10"
 
-        <div className="mb-6">
+  const labelStyle =
+    "mb-2 block text-sm font-semibold text-slate-300"
+
+  return (
+    <div className="min-h-screen bg-[#080D19] px-5 py-7 text-slate-100 sm:px-8 sm:py-9">
+
+      <div className="mx-auto max-w-3xl">
+
+        {/* Page Header */}
+        <div className="mb-7">
 
           <Link
             to="/evaluations"
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="inline-flex items-center gap-2 text-sm font-medium text-blue-400 transition hover:text-blue-300"
           >
             ← Back to Evaluations
           </Link>
 
-          <h1 className="text-2xl font-bold text-slate-900 mt-3">
+          <p className="mt-6 text-xs font-semibold tracking-[2px] text-blue-400">
+            EVALAI / WORKSPACE
+          </p>
+
+          <h1 className="mt-2 text-2xl font-bold text-white sm:text-3xl">
             Create New Evaluation
           </h1>
 
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="mt-2 text-sm text-slate-400">
             Set up an evaluation for AI-based answer sheet assessment.
           </p>
 
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+        {/* Form Card */}
+        <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#111B2D] shadow-xl shadow-black/10">
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="border-b border-white/10 px-6 py-5 sm:px-8">
+            <h2 className="text-base font-bold text-white">
+              Examination Details
+            </h2>
 
+            <p className="mt-1 text-xs text-slate-400">
+              Enter the required information to create an evaluation.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6 p-6 sm:p-8">
+
+            {/* Evaluation Title */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                Evaluation Title *
+              <label className={labelStyle}>
+                Evaluation Title <span className="text-blue-400">*</span>
               </label>
 
               <input
@@ -89,15 +117,16 @@ function NewEvaluation() {
                   setError("")
                 }}
                 placeholder="e.g. Data Structures - Mid Term"
-                className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className={inputStyle}
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Subject and Class */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Subject *
+                <label className={labelStyle}>
+                  Subject <span className="text-blue-400">*</span>
                 </label>
 
                 <input
@@ -108,13 +137,13 @@ function NewEvaluation() {
                     setError("")
                   }}
                   placeholder="e.g. Data Structures"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={inputStyle}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Class / Section *
+                <label className={labelStyle}>
+                  Class / Section <span className="text-blue-400">*</span>
                 </label>
 
                 <input
@@ -125,17 +154,18 @@ function NewEvaluation() {
                     setError("")
                   }}
                   placeholder="e.g. B.Tech CSE - 3A"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={inputStyle}
                 />
               </div>
 
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Marks and Rubric */}
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Total Marks *
+                <label className={labelStyle}>
+                  Total Marks <span className="text-blue-400">*</span>
                 </label>
 
                 <input
@@ -147,13 +177,13 @@ function NewEvaluation() {
                     setError("")
                   }}
                   placeholder="e.g. 100"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={inputStyle}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Evaluation Rubric *
+                <label className={labelStyle}>
+                  Evaluation Rubric <span className="text-blue-400">*</span>
                 </label>
 
                 <select
@@ -162,7 +192,7 @@ function NewEvaluation() {
                     setRubric(e.target.value)
                     setError("")
                   }}
-                  className="w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm text-slate-600 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className={inputStyle}
                 >
                   <option value="">Select rubric</option>
                   <option value="standard">Standard Evaluation</option>
@@ -173,60 +203,92 @@ function NewEvaluation() {
 
             </div>
 
+            {/* Question Paper Upload */}
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+              <label className={labelStyle}>
                 Question Paper
               </label>
 
-              <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center hover:border-blue-400 transition">
+              <div className="rounded-xl border-2 border-dashed border-white/15 bg-[#0B1220] p-6 text-center transition hover:border-blue-400/50">
+
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-blue-400/10 text-blue-400">
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.7"
+                    className="h-6 w-6"
+                  >
+                    <path d="M12 16V4m0 0L7 9m5-5 5 5M5 16v3a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3" />
+                  </svg>
+                </div>
+
+                <p className="mt-3 text-sm font-semibold text-white">
+                  Upload Question Paper
+                </p>
+
+                <p className="mt-1 text-xs text-slate-400">
+                  PDF, JPG or PNG formats supported
+                </p>
 
                 <input
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png"
-                  onChange={(e) => setQuestionPaper(e.target.files[0])}
-                  className="w-full text-sm text-slate-500"
+                  onChange={(e) =>
+                    setQuestionPaper(e.target.files[0] || null)
+                  }
+                  className="mt-4 block w-full cursor-pointer text-xs text-slate-400 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-blue-500/15 file:px-4 file:py-2 file:font-semibold file:text-blue-300 hover:file:bg-blue-500/25"
                 />
 
-                <p className="text-xs text-slate-400 mt-2">
-                  Upload PDF, JPG or PNG
-                </p>
-
                 {questionPaper && (
-                  <p className="text-xs text-blue-600 mt-2">
-                    Selected: {questionPaper.name}
+                  <p className="mt-3 break-all text-xs font-medium text-emerald-300">
+                    ✓ Selected: {questionPaper.name}
                   </p>
                 )}
 
               </div>
             </div>
 
+            {/* Error Message */}
             {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+              <div className="rounded-xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-300">
                 {error}
-              </p>
+              </div>
             )}
 
-            <div className="flex justify-end gap-3 pt-2">
+            {/* Form Actions */}
+            <div className="flex flex-col-reverse justify-end gap-3 border-t border-white/10 pt-6 sm:flex-row">
 
               <Link
                 to="/evaluations"
-                className="px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-xl border border-white/10 px-6 py-3 text-center text-sm font-semibold text-slate-300 transition hover:bg-white/5 hover:text-white"
               >
                 Cancel
               </Link>
 
               <button
                 type="submit"
-                className="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+                style={{ backgroundColor: "#3B82F6" }}
+                onMouseEnter={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#2563EB")
+                }
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.backgroundColor = "#3B82F6")
+                }
+                className="rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-950/30 transition hover:-translate-y-0.5"
               >
-                Create Evaluation
+                Create Evaluation →
               </button>
 
             </div>
 
           </form>
-
         </div>
+
+        <footer className="mt-6 pb-3 text-center text-xs text-slate-500">
+          EvalAI · AI Based Theory Answer Sheet Evaluation
+        </footer>
+
       </div>
     </div>
   )
