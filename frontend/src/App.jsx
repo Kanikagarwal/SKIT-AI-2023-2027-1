@@ -1,7 +1,9 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom"
+
 import Login from "./pages/Login"
 import Register from "./pages/Register"
 import ForgotPassword from "./pages/ForgotPassword"
+
 import TeacherDashboard from "./pages/TeacherDashboard"
 import Evaluations from "./pages/Evaluations"
 import NewEvaluation from "./pages/NewEvaluation"
@@ -10,11 +12,14 @@ import Rubrics from "./pages/Rubrics"
 import Students from "./pages/Students"
 import StudentDetails from "./pages/StudentDetails"
 import TeacherLayout from "./pages/TeacherLayout"
+
 import StudentDashboard from "./pages/StudentDashboard"
 import StudentEvaluations from "./pages/StudentEvaluations"
 import StudentAnswerSheets from "./pages/StudentAnswerSheets"
 import StudentResult from "./pages/StudentResult"
 import StudentProfile from "./pages/StudentProfile"
+import StudentLayout from "./pages/StudentLayout"
+
 import AdminDashboard from "./pages/AdminDashboard"
 
 function App() {
@@ -22,10 +27,12 @@ function App() {
     <BrowserRouter>
       <Routes>
 
+        {/* Authentication Routes */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
+        {/* Teacher Routes */}
         <Route
           path="/teacher-dashboard"
           element={
@@ -89,31 +96,53 @@ function App() {
           }
         />
 
+        {/* Student Routes */}
         <Route
           path="/student-dashboard"
-          element={<StudentDashboard />}
+          element={
+            <StudentLayout>
+              <StudentDashboard />
+            </StudentLayout>
+          }
         />
 
         <Route
           path="/student-evaluations"
-          element={<StudentEvaluations />}
+          element={
+            <StudentLayout>
+              <StudentEvaluations />
+            </StudentLayout>
+          }
         />
 
         <Route
           path="/student-answer-sheets"
-          element={<StudentAnswerSheets />}
+          element={
+            <StudentLayout>
+              <StudentAnswerSheets />
+            </StudentLayout>
+          }
         />
 
         <Route
           path="/student-result"
-          element={<StudentResult />}
+          element={
+            <StudentLayout>
+              <StudentResult />
+            </StudentLayout>
+          }
         />
 
         <Route
           path="/student-profile"
-          element={<StudentProfile />}
+          element={
+            <StudentLayout>
+              <StudentProfile />
+            </StudentLayout>
+          }
         />
 
+        {/* Admin Route */}
         <Route
           path="/admin-dashboard"
           element={<AdminDashboard />}
