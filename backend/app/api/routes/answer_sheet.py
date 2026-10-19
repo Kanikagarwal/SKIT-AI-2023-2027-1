@@ -77,3 +77,38 @@ def receive_ocr_result(
         "exam_id": answer_sheet.exam_id,
         "ocr_status": answer_sheet.ocr_status
     }
+
+
+@router.get("/{answer_sheet_id}/evaluation-input")
+def get_evaluation_input(
+    answer_sheet_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEACHER)
+    )
+):
+    answer_sheet = (
+        db.query(AnswerSheet)
+        .filter(AnswerSheet.id == answer_sheet_id)
+        .first()
+    )
+
+    if answer_sheet is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Answer sheet not found"
+        )
+
+    if not answer_sheet.ocr_result:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="OCR result not available"
+        )
+
+    return {
+        "answer_sheet_id": answer_sheet.id,
+        "student_id": answer_sheet.student_id,
+        "exam_id": answer_sheet.exam_id,
+        "ocr_status": answer_sheet.ocr_status,
+        "evaluation_input": json.loads(answer_sheet.ocr_result)
+    }
