@@ -9,6 +9,7 @@ from app.models.exam import Exam
 from app.models.answer_sheet import AnswerSheet
 from app.api.routes.exams import router as exams_router
 from app.api.routes.answer_sheet import router as answer_sheet_router
+from app.models.evaluation import Evaluation
 
 Base.metadata.create_all(bind=engine)
 
