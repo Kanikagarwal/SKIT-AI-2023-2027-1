@@ -14,4 +14,3 @@ class QuestionEvaluationRequest(BaseModel):
 class EvaluationResultRequest(BaseModel):
     answer_sheet_id: int = Field(gt=0)
     evaluations: list[QuestionEvaluationRequest] = Field(min_length=1)
-# schema to the API endpoint that stores evaluation results in your database.
