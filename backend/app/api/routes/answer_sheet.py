@@ -10,6 +10,8 @@ from app.models.user import User, UserRole
 from app.models.exam import Exam
 from app.models.answer_sheet import AnswerSheet
 from app.schemas.answer_sheet import OCRResultRequest
+from app.models.evaluation import Evaluation
+from app.schemas.evaluation import EvaluationResultRequest
 
 
 router = APIRouter(
@@ -111,4 +113,90 @@ def get_evaluation_input(
         "exam_id": answer_sheet.exam_id,
         "ocr_status": answer_sheet.ocr_status,
         "evaluation_input": json.loads(answer_sheet.ocr_result)
+    }
+
+
+
+@router.post("/{answer_sheet_id}/evaluation-result")
+def save_evaluation_result(
+    answer_sheet_id: int,
+    data: EvaluationResultRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN, UserRole.TEACHER)
+    )
+):
+    # Check whether the answer sheet exists
+    answer_sheet = (
+        db.query(AnswerSheet)
+        .filter(AnswerSheet.id == answer_sheet_id)
+        .first()
+    )
+
+    if answer_sheet is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Answer sheet not found"
+        )
+
+    # Ensure the URL ID and request ID match
+    if data.answer_sheet_id != answer_sheet_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Answer sheet ID mismatch"
+        )
+
+    # Validate marks before saving anything
+    for item in data.evaluations:
+        if item.ai_marks > item.max_marks:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"AI marks exceed maximum marks for question {item.question_no}"
+            )
+
+    # Save each question's evaluation
+    saved_evaluations = []
+
+    try:
+        for item in data.evaluations:
+            evaluation = Evaluation(
+                answer_sheet_id=answer_sheet_id,
+                question_no=item.question_no,
+                ai_marks=item.ai_marks,
+                max_marks=item.max_marks,
+                feedback=item.feedback,
+                matched_concepts=json.dumps(item.matched_concepts),
+                missing_concepts=json.dumps(item.missing_concepts),
+                status="AI_EVALUATED"
+            )
+
+            db.add(evaluation)
+            saved_evaluations.append(evaluation)
+
+        answer_sheet.ocr_status = "EVALUATED"
+
+        db.commit()
+
+        for evaluation in saved_evaluations:
+            db.refresh(evaluation)
+
+    except Exception:
+        db.rollback()
+        raise
+
+    return {
+        "message": "Evaluation results saved successfully",
+        "answer_sheet_id": answer_sheet_id,
+        "evaluations_saved": len(saved_evaluations),
+        "status": "AI_EVALUATED",
+        "evaluations": [
+            {
+                "evaluation_id": item.id,
+                "question_no": item.question_no,
+                "ai_marks": item.ai_marks,
+                "max_marks": item.max_marks,
+                "status": item.status
+            }
+            for item in saved_evaluations
+        ]
     }
