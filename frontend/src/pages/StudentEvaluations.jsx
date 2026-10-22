@@ -56,17 +56,40 @@ function StudentEvaluations() {
 
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("All")
+  const [sortOrder, setSortOrder] = useState("newest")
 
-  const filteredEvaluations = evaluations.filter((evaluation) => {
-    const matchesSearch =
-      evaluation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      evaluation.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredEvaluations = evaluations
+    .filter((evaluation) => {
+      const matchesSearch =
+        evaluation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        evaluation.subject.toLowerCase().includes(searchTerm.toLowerCase())
 
-    const matchesStatus =
-      statusFilter === "All" || evaluation.status === statusFilter
+      const matchesStatus =
+        statusFilter === "All" || evaluation.status === statusFilter
 
-    return matchesSearch && matchesStatus
-  })
+      return matchesSearch && matchesStatus
+    })
+    .sort((a, b) => {
+      if (sortOrder === "newest" || sortOrder === "oldest") {
+        const dateA = new Date(a.date).getTime()
+        const dateB = new Date(b.date).getTime()
+        return sortOrder === "newest" ? dateB - dateA : dateA - dateB
+      }
+
+      if (a.status !== b.status) {
+        return a.status === "Evaluated" ? -1 : 1
+      }
+
+      const scoreA = parseFloat(a.score)
+      const scoreB = parseFloat(b.score)
+      return sortOrder === "highest" ? scoreB - scoreA : scoreA - scoreB
+    })
+
+  const clearFilters = () => {
+    setSearchTerm("")
+    setStatusFilter("All")
+    setSortOrder("newest")
+  }
 
   const stats = [
     {
@@ -183,7 +206,7 @@ function StudentEvaluations() {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2">
 
                 <input
                   type="text"
@@ -202,6 +225,27 @@ function StudentEvaluations() {
                   <option value="Evaluated">Evaluated</option>
                   <option value="Pending">Pending</option>
                 </select>
+
+                <select
+                  value={sortOrder}
+                  onChange={(e) => setSortOrder(e.target.value)}
+                  aria-label="Sort evaluations"
+                  className="bg-[#080D19] border border-white/10 rounded-lg px-3 py-2.5 text-xs text-slate-300 outline-none focus:border-blue-500 transition"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="highest">Highest Score</option>
+                  <option value="lowest">Lowest Score</option>
+                </select>
+
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  disabled={!searchTerm && statusFilter === "All" && sortOrder === "newest"}
+                  className="text-xs font-semibold text-blue-300 hover:text-white bg-blue-500/10 hover:bg-blue-500/20 border border-blue-400/20 disabled:opacity-40 disabled:cursor-not-allowed px-3 py-2.5 rounded-lg transition"
+                >
+                  Clear Filters
+                </button>
 
               </div>
 
