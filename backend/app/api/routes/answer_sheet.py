@@ -12,12 +12,40 @@ from app.models.answer_sheet import AnswerSheet
 from app.schemas.answer_sheet import OCRResultRequest
 from app.models.evaluation import Evaluation
 from app.schemas.evaluation import EvaluationResultRequest
+import os
+import secrets
+
+from fastapi import Header
 
 
 router = APIRouter(
     prefix="/api/answer-sheets",
     tags=["Answer Sheets"]
 )
+
+def verify_ocr_api_key(
+    ocr_api_key: str | None = Header(
+        default=None,
+        alias="X-OCR-API-Key"
+    )
+):
+    expected_key = os.getenv("OCR_API_KEY")
+
+    if not expected_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="OCR API key is not configured"
+        )
+
+    if not ocr_api_key or not secrets.compare_digest(
+        ocr_api_key, expected_key
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid OCR API key"
+        )
+
+    return True
 
 
 @router.post(
@@ -173,7 +201,7 @@ def save_evaluation_result(
             db.add(evaluation)
             saved_evaluations.append(evaluation)
 
-        answer_sheet.ocr_status = "EVALUATED"
+        answer_sheet.evaluation_status = "COMPLETED"
 
         db.commit()
 
