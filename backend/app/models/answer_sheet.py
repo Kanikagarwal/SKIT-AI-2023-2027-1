@@ -36,6 +36,11 @@ class AnswerSheet(Base):
         default="PENDING"
     )
 
+    evaluation_status = Column(
+    String(50),
+    nullable=False,
+    default="PENDING"
+) 
     ocr_result = Column(
         Text,
         nullable=True
