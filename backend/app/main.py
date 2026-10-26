@@ -1,3 +1,6 @@
+import os
+from pathlib import Path
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,7 +13,8 @@ from app.models.answer_sheet import AnswerSheet
 from app.api.routes.exams import router as exams_router
 from app.api.routes.answer_sheet import router as answer_sheet_router
 from app.models.evaluation import Evaluation
-
+ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
+load_dotenv(ENV_FILE)
 Base.metadata.create_all(bind=engine)
 
 

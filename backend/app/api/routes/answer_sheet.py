@@ -55,9 +55,7 @@ def verify_ocr_api_key(
 def receive_ocr_result(
     data: OCRResultRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(
-        require_role(UserRole.ADMIN)
-    )
+    api_key_verified: bool = Depends(verify_ocr_api_key)
 ):
     # Check that the student exists
     student = (
