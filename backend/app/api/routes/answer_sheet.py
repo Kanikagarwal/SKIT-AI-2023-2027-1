@@ -199,6 +199,12 @@ def save_evaluation_result(
                     f"question {item.question_no}"
                 )
             )
+        # Prevent duplicate evaluation submissions
+        if answer_sheet.evaluation_status == "COMPLETED":
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This answer sheet has already been evaluated"
+    )
 
     saved_evaluations = []
 
