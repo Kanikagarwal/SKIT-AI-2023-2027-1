@@ -1,7 +1,9 @@
 
 import json
+import os
+import secrets
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -9,13 +11,9 @@ from app.middleware.auth import require_role
 from app.models.user import User, UserRole
 from app.models.exam import Exam
 from app.models.answer_sheet import AnswerSheet
-from app.schemas.answer_sheet import OCRResultRequest
 from app.models.evaluation import Evaluation
+from app.schemas.answer_sheet import OCRResultRequest
 from app.schemas.evaluation import EvaluationResultRequest
-import os
-import secrets
-
-from fastapi import Header
 
 
 router = APIRouter(
@@ -23,6 +21,8 @@ router = APIRouter(
     tags=["Answer Sheets"]
 )
 
+
+# Verify API key sent by the OCR module
 def verify_ocr_api_key(
     ocr_api_key: str | None = Header(
         default=None,
@@ -48,6 +48,7 @@ def verify_ocr_api_key(
     return True
 
 
+# Receive and store OCR results
 @router.post(
     "/ocr-result",
     status_code=status.HTTP_201_CREATED
@@ -107,6 +108,7 @@ def receive_ocr_result(
     }
 
 
+# Provide OCR data to the evaluation module
 @router.get("/{answer_sheet_id}/evaluation-input")
 def get_evaluation_input(
     answer_sheet_id: int,
@@ -127,6 +129,14 @@ def get_evaluation_input(
             detail="Answer sheet not found"
         )
 
+    # Ensure OCR processing is complete
+    if answer_sheet.ocr_status != "COMPLETED":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="OCR processing is not completed yet"
+        )
+
+    # Ensure OCR data exists
     if not answer_sheet.ocr_result:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -142,7 +152,7 @@ def get_evaluation_input(
     }
 
 
-
+# Receive and store AI evaluation results
 @router.post("/{answer_sheet_id}/evaluation-result")
 def save_evaluation_result(
     answer_sheet_id: int,
@@ -172,18 +182,28 @@ def save_evaluation_result(
             detail="Answer sheet ID mismatch"
         )
 
+    # Ensure OCR processing is complete before evaluation
+    if answer_sheet.ocr_status != "COMPLETED":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="OCR processing is not completed yet"
+        )
+
     # Validate marks before saving anything
     for item in data.evaluations:
         if item.ai_marks > item.max_marks:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"AI marks exceed maximum marks for question {item.question_no}"
+                detail=(
+                    "AI marks exceed maximum marks for "
+                    f"question {item.question_no}"
+                )
             )
 
-    # Save each question's evaluation
     saved_evaluations = []
 
     try:
+        # Save each question's evaluation
         for item in data.evaluations:
             evaluation = Evaluation(
                 answer_sheet_id=answer_sheet_id,
