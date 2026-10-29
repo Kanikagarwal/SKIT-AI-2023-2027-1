@@ -1,3 +1,4 @@
+
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 
@@ -16,7 +17,7 @@ function Register() {
   const handleRegister = (e) => {
     e.preventDefault()
 
-    if (!name || !email || !role || !password || !confirmPassword) {
+    if (!name.trim() || !email || !role || !password || !confirmPassword) {
       setError("Please fill in all fields.")
       return
     }
@@ -40,33 +41,48 @@ function Register() {
     navigate("/")
   }
 
+  const inputClass =
+    "w-full rounded-xl border border-slate-700 bg-slate-900/80 px-4 py-3 text-sm text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4">
+    <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-8 sm:px-6">
       <div className="w-full max-w-md">
 
-        <div className="text-center mb-1">
-          <div className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-blue-600 text-white text-sm font-bold mb-1">
+        <div className="mb-7 text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-400 via-blue-600 to-indigo-700 text-3xl font-extrabold text-white shadow-lg shadow-blue-600/30">
             E
           </div>
 
-          <h1 className="text-lg font-bold text-slate-900">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.3em] text-blue-400">
+            EvalAI
+          </p>
+
+          <h1 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Create your account
           </h1>
 
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Get started with EvalAI
+          <p className="mt-3 text-sm text-slate-400">
+            Get started with intelligent answer evaluation.
           </p>
         </div>
 
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4">
+        <div className="rounded-3xl border border-slate-800 bg-slate-900/90 p-6 shadow-2xl shadow-black/30 sm:p-8">
 
-          <form onSubmit={handleRegister} className="space-y-2">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-white">
+              Join EvalAI
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Enter your details to continue.
+            </p>
+          </div>
+
+          <form onSubmit={handleRegister} className="space-y-4">
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Full name
               </label>
-
               <input
                 type="text"
                 value={name}
@@ -75,15 +91,15 @@ function Register() {
                   setError("")
                 }}
                 placeholder="Enter your full name"
-                className="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                autoComplete="name"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Email address
               </label>
-
               <input
                 type="email"
                 value={email}
@@ -92,35 +108,34 @@ function Register() {
                   setError("")
                 }}
                 placeholder="you@example.com"
-                className="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                autoComplete="email"
+                className={inputClass}
               />
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Account type
               </label>
-
               <select
                 value={role}
                 onChange={(e) => {
                   setRole(e.target.value)
                   setError("")
                 }}
-                className="w-full border border-slate-300 rounded-lg px-3 py-1.5 text-sm text-slate-600 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className={`${inputClass} ${role ? "" : "text-slate-500"}`}
               >
                 <option value="">Select your role</option>
                 <option value="teacher">Teacher</option>
                 <option value="student">Student</option>
-                <option value="student">Admin</option>
+                <option value="admin">Admin</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Password
               </label>
-
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -130,13 +145,13 @@ function Register() {
                     setError("")
                   }}
                   placeholder="Create a password"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 pr-14 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  autoComplete="new-password"
+                  className={`${inputClass} pr-16`}
                 />
-
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-blue-600 hover:text-blue-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-blue-400 hover:text-blue-300"
                 >
                   {showPassword ? "Hide" : "Show"}
                 </button>
@@ -144,10 +159,9 @@ function Register() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-medium text-slate-700 mb-0.5">
+              <label className="mb-2 block text-sm font-medium text-slate-300">
                 Confirm password
               </label>
-
               <div className="relative">
                 <input
                   type={showConfirmPassword ? "text" : "password"}
@@ -157,15 +171,15 @@ function Register() {
                     setError("")
                   }}
                   placeholder="Confirm your password"
-                  className="w-full border border-slate-300 rounded-lg px-3 py-1.5 pr-14 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  autoComplete="new-password"
+                  className={`${inputClass} pr-16`}
                 />
-
                 <button
                   type="button"
                   onClick={() =>
                     setShowConfirmPassword(!showConfirmPassword)
                   }
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-blue-600 hover:text-blue-700"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-blue-400 hover:text-blue-300"
                 >
                   {showConfirmPassword ? "Hide" : "Show"}
                 </button>
@@ -173,35 +187,43 @@ function Register() {
             </div>
 
             {error && (
-              <p className="text-[10px] text-red-600 bg-red-50 border border-red-100 rounded-lg px-2.5 py-1">
+              <div
+                role="alert"
+                className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+              >
                 {error}
-              </p>
+              </div>
             )}
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-1.5 rounded-lg text-sm font-semibold transition"
+              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 py-3.5 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:from-blue-500 hover:to-indigo-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-slate-900"
             >
-              Create account
+              Create account →
             </button>
 
           </form>
 
-          <div className="border-t border-slate-200 mt-2.5 pt-2.5">
-            <p className="text-center text-[11px] text-slate-500">
-              Already have an account?{" "}
-              <Link
-                to="/"
-                className="font-semibold text-blue-600 hover:text-blue-700"
-              >
-                Sign in
-              </Link>
-            </p>
+          <div className="my-6 flex items-center gap-3">
+            <div className="h-px flex-1 bg-slate-800" />
+            <span className="text-xs text-slate-500">
+              Already registered?
+            </span>
+            <div className="h-px flex-1 bg-slate-800" />
           </div>
 
+          <p className="text-center text-sm text-slate-400">
+            Already have an account?{" "}
+            <Link
+              to="/"
+              className="font-semibold text-blue-400 transition hover:text-blue-300"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
 
-        <p className="text-center text-[9px] text-slate-400 mt-1">
+        <p className="mt-6 text-center text-xs text-slate-500">
           AI-powered theory answer evaluation
         </p>
 
