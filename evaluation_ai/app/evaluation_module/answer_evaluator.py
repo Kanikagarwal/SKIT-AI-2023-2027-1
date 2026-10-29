@@ -66,7 +66,7 @@ class AnswerEvaluator:
         }
 
     def evaluate(self, answer_key, student_submission):
-        """Evaluate all questions for one student."""
+        """Evaluate all questions and calculate total marks."""
 
         exam_id = answer_key.get("exam_id")
         student = student_submission.get("student", {})
@@ -79,7 +79,8 @@ class AnswerEvaluator:
                 "roll_no": student.get("roll_no"),
                 "name": student.get("name")
             },
-            "questions": []
+            "questions": [],
+            "total_marks_awarded": 0.0
         }
 
         for question in questions:
@@ -112,6 +113,14 @@ class AnswerEvaluator:
                     student_answer
                 )
 
+                results["total_marks_awarded"] += (
+                    question_result["evaluation"]["marks_awarded"]
+                )
+
             results["questions"].append(question_result)
+
+        results["total_marks_awarded"] = round(
+            results["total_marks_awarded"], 2
+        )
 
         return results
