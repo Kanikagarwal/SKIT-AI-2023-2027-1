@@ -1,3 +1,4 @@
+
 from evaluation_ai.app.evaluation_module.answer_evaluator import (
     AnswerEvaluator
 )
@@ -7,10 +8,7 @@ from evaluation_ai.app.evaluation_module.dataset import (
 
 
 def load_test_data():
-    """
-    Load the real answer key and student submission
-    used by the evaluation system.
-    """
+    """Load the real answer key and student submission."""
 
     loader = EvaluationDataLoader()
 
@@ -24,20 +22,14 @@ def load_test_data():
 
 def test_answer_evaluator_returns_student_information():
     answer_key, student_submission = load_test_data()
-
     evaluator = AnswerEvaluator(answer_key)
 
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
     assert result["exam_id"] == answer_key["exam_id"]
-
     assert result["student"]["roll_no"] == (
         student_submission["student"]["roll_no"]
     )
-
     assert result["student"]["name"] == (
         student_submission["student"]["name"]
     )
@@ -45,111 +37,108 @@ def test_answer_evaluator_returns_student_information():
 
 def test_answer_evaluator_evaluates_attempted_questions():
     answer_key, student_submission = load_test_data()
-
     evaluator = AnswerEvaluator(answer_key)
 
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
-    question_results = result["questions"]
-
-    for question_result in question_results:
-
+    for question_result in result["questions"]:
         question_id = str(question_result["question_id"])
 
         if student_submission["answers"][question_id]["attempted"]:
+            evaluation = question_result["evaluation"]
 
-            assert question_result["evaluation"] is not None
-
-            assert "keyword_evidence" in (
-                question_result["evaluation"]
-            )
-
-            assert "semantic_similarity_score" in (
-                question_result["evaluation"]
-            )
+            assert evaluation is not None
+            assert "keyword_evidence" in evaluation
+            assert "semantic_similarity_score" in evaluation
+            assert "marks_awarded" in evaluation
 
 
 def test_answer_evaluator_does_not_evaluate_unattempted_questions():
     answer_key, student_submission = load_test_data()
-
     evaluator = AnswerEvaluator(answer_key)
 
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
-    question_results = result["questions"]
-
-    for question_result in question_results:
-
+    for question_result in result["questions"]:
         question_id = str(question_result["question_id"])
 
         if not student_submission["answers"][question_id]["attempted"]:
-
             assert question_result["evaluation"] is None
 
 
 def test_keyword_evidence_contains_expected_fields():
     answer_key, student_submission = load_test_data()
-
     evaluator = AnswerEvaluator(answer_key)
 
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
     for question_result in result["questions"]:
-
         if question_result["evaluation"] is None:
             continue
 
-        keyword_evidence = (
-            question_result["evaluation"]["keyword_evidence"]
-        )
+        evidence = question_result["evaluation"]["keyword_evidence"]
 
-        assert "matched_keywords" in keyword_evidence
-        assert "missing_keywords" in keyword_evidence
-        assert "keyword_score" in keyword_evidence
+        assert "matched_keywords" in evidence
+        assert "missing_keywords" in evidence
+        assert "keyword_score" in evidence
 
-        assert isinstance(
-            keyword_evidence["matched_keywords"],
-            list
-        )
-
-        assert isinstance(
-            keyword_evidence["missing_keywords"],
-            list
-        )
-
-        assert 0 <= keyword_evidence["keyword_score"] <= 100
+        assert isinstance(evidence["matched_keywords"], list)
+        assert isinstance(evidence["missing_keywords"], list)
+        assert 0 <= evidence["keyword_score"] <= 100
 
 
 def test_semantic_similarity_is_within_valid_range():
     answer_key, student_submission = load_test_data()
-
     evaluator = AnswerEvaluator(answer_key)
 
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
     for question_result in result["questions"]:
-
         if question_result["evaluation"] is None:
             continue
 
-        score = (
-            question_result["evaluation"]
-            ["semantic_similarity_score"]
+        score = question_result["evaluation"]["semantic_similarity_score"]
+        assert 0 <= score <= 100
+
+
+def test_marks_are_within_question_limit():
+    answer_key, student_submission = load_test_data()
+    evaluator = AnswerEvaluator(answer_key)
+
+    result = evaluator.evaluate(answer_key, student_submission)
+
+    for question_result in result["questions"]:
+        if question_result["evaluation"] is None:
+            continue
+
+        marks = question_result["evaluation"]["marks_awarded"]
+        max_marks = question_result["max_marks"]
+
+        assert isinstance(marks, float)
+        assert 0 <= marks <= max_marks
+
+
+def test_marks_match_the_configured_scoring_formula():
+    answer_key, student_submission = load_test_data()
+    evaluator = AnswerEvaluator(answer_key)
+
+    result = evaluator.evaluate(answer_key, student_submission)
+
+    for question_result in result["questions"]:
+        if question_result["evaluation"] is None:
+            continue
+
+        evaluation = question_result["evaluation"]
+        keyword_score = evaluation["keyword_evidence"]["keyword_score"]
+        semantic_score = evaluation["semantic_similarity_score"]
+        max_marks = question_result["max_marks"]
+
+        expected_marks = round(
+            ((keyword_score + semantic_score) / 2 / 100) * max_marks,
+            2
         )
 
-        assert 0 <= score <= 100
+        assert evaluation["marks_awarded"] == expected_marks
 
 
 def test_evaluator_handles_empty_attempted_answer():
@@ -159,20 +148,13 @@ def test_evaluator_handles_empty_attempted_answer():
         "attempted": True,
         "answer": ""
     }
-
-    # Q7 must remain unattempted because Part C requires
-    # exactly one attempted question.
     student_submission["answers"]["7"] = {
         "attempted": False,
         "answer": None
     }
 
     evaluator = AnswerEvaluator(answer_key)
-
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
     question_6 = next(
         question
@@ -180,38 +162,26 @@ def test_evaluator_handles_empty_attempted_answer():
         if question["question_id"] == 6
     )
 
-    assert question_6["evaluation"] is not None
+    evaluation = question_6["evaluation"]
 
-    assert (
-        question_6["evaluation"]["keyword_evidence"]["keyword_score"]
-        == 0.0
-    )
-
-    assert (
-        question_6["evaluation"]["semantic_similarity_score"]
-        == 0.0
-    )
+    assert evaluation is not None
+    assert evaluation["keyword_evidence"]["keyword_score"] == 0.0
+    assert evaluation["semantic_similarity_score"] == 0.0
+    assert evaluation["marks_awarded"] == 0.0
 
 
 def test_evaluator_processes_all_questions_in_answer_key():
     answer_key, student_submission = load_test_data()
-
     evaluator = AnswerEvaluator(answer_key)
 
-    result = evaluator.evaluate(
-        answer_key,
-        student_submission
-    )
+    result = evaluator.evaluate(answer_key, student_submission)
 
-    assert len(result["questions"]) == len(
-        answer_key["questions"]
-    )
+    assert len(result["questions"]) == len(answer_key["questions"])
 
     result_question_ids = {
         question["question_id"]
         for question in result["questions"]
     }
-
     answer_key_question_ids = {
         question["question_id"]
         for question in answer_key["questions"]
