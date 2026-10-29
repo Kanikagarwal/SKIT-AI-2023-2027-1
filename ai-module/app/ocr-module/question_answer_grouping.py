@@ -8,83 +8,73 @@ import re
 # --------------------------------------------------
 
 BASE_DIR = Path(__file__).resolve().parent
-DATA_DIR = BASE_DIR / "data"
 
-INPUT_JSON = DATA_DIR / "all_pages_trocr_results.json"
-OUTPUT_JSON = DATA_DIR / "question_answer_groups.json"
+INPUT_JSON = (
+    BASE_DIR
+    / "data"
+    / "English_processed"
+    / "all_pages_paddleocr_results.json"
+)
+
+# Separate output file to protect existing results.
+OUTPUT_JSON = (
+    BASE_DIR
+    / "data"
+    / "English_processed"
+    / "question_answer_groups_test.json"
+)
 
 
 # --------------------------------------------------
-# QUESTION NUMBER DETECTION
+# MAIN QUESTION DETECTION
 # --------------------------------------------------
 
 MAIN_QUESTION = re.compile(
-    r"^\s*(?:Q(?:uestion)?\s*(\d+)|(\d+)\s*[.)])",
-    re.IGNORECASE,
-)
-
-ATTACHED_SUBPART = re.compile(
-    r"^\s*(\d+)\s*\(\s*([a-z]|i{1,3}|iv|v|vi{0,3})\s*\)",
-    re.IGNORECASE,
-)
-
-SUBPART = re.compile(
-    r"^\s*\(\s*([a-z]|i{1,3}|iv|v|vi{0,3})\s*\)",
+    r"^\s*(?:"
+    r"Q(?:uestion)?\s*(\d+)"
+    r"|"
+    r"(\d+)\s*(?:\)\s*\(\s*[a-z]\s*\)|[.)])"
+    r")",
     re.IGNORECASE,
 )
 
 
-def detect_marker(text):
-    """Identify a main question number or subpart."""
-
-    match = ATTACHED_SUBPART.match(text)
-    if match:
-        return {
-            "type": "main_and_subpart",
-            "question_number": match.group(1),
-            "subpart": match.group(2).lower(),
-        }
+def detect_main_question(text):
+    """
+    Detect a main question marker, such as:
+    1)
+    4)(a)
+    5.
+    Question 6
+    """
 
     match = MAIN_QUESTION.match(text)
-    if match:
-        number = match.group(1) or match.group(2)
-        return {
-            "type": "main",
-            "question_number": number,
-            "subpart": None,
-        }
 
-    match = SUBPART.match(text)
     if match:
-        return {
-            "type": "subpart",
-            "subpart": match.group(1).lower(),
-        }
+        return match.group(1) or match.group(2)
 
     return None
 
 
-def line_number(line_id):
-    match = re.search(r"(\d+)", line_id or "")
-    return int(match.group(1)) if match else 0
-
-
 # --------------------------------------------------
-# LOAD OCR RESULTS
+# GROUP QUESTION ANSWERS
 # --------------------------------------------------
 
 def main():
     if not INPUT_JSON.exists():
         raise FileNotFoundError(
-            f"OCR JSON not found: {INPUT_JSON}\n"
-            "Make sure all_pages_trocr_results.json is inside data/."
+            f"PaddleOCR results not found:\n{INPUT_JSON}"
         )
 
     with INPUT_JSON.open("r", encoding="utf-8") as file:
         records = json.load(file)
 
-    # Group by page first, so lines from different pages
-    # are never accidentally combined.
+    if not isinstance(records, list):
+        raise ValueError(
+            "Expected the PaddleOCR JSON to contain a list of records."
+        )
+
+    # Organize records by page while preserving their original order.
     pages = {}
 
     for record in records:
@@ -94,10 +84,6 @@ def main():
     groups = []
 
     for page, page_records in pages.items():
-        page_records.sort(
-            key=lambda record: line_number(record.get("line_id", ""))
-        )
-
         current = None
 
         def save_current():
@@ -105,63 +91,73 @@ def main():
 
             if current is not None:
                 current["answer_text"] = " ".join(
-                    item["text"] for item in current["lines"]
+                    line["text"] for line in current["lines"]
                 ).strip()
 
                 groups.append(current)
                 current = None
 
         for record in page_records:
-            text = (record.get("text") or "").strip()
+            text = (
+                record.get("text")
+                or record.get("rec_text")
+                or ""
+            ).strip()
 
             if not text:
                 continue
 
-            marker = detect_marker(text)
+            question_number = detect_main_question(text)
 
-            if marker and marker["type"] in (
-                "main",
-                "main_and_subpart",
-            ):
+            # Start a new group only for a main question.
+            if question_number is not None:
                 save_current()
 
                 current = {
                     "page": page,
-                    "question_number": marker["question_number"],
-                    "subpart": marker.get("subpart"),
+                    "question_number": question_number,
                     "lines": [],
                 }
 
-            elif marker and marker["type"] == "subpart":
-                if current is not None:
-                    current["subpart"] = marker["subpart"]
-
+            # Keep all lines, including subpart markers,
+            # inside the current main-question group.
             if current is not None:
                 current["lines"].append({
-                    "line_id": record.get("line_id", ""),
+                    "crop": record.get("crop", ""),
                     "text": text,
+                    "confidence": record.get("confidence"),
                 })
 
+        # Save the final question on this page.
         save_current()
 
     # --------------------------------------------------
-    # SAVE RESULTS
+    # SAVE GROUPED RESULTS
     # --------------------------------------------------
 
-    with OUTPUT_JSON.open("w", encoding="utf-8") as file:
-        json.dump(groups, file, ensure_ascii=False, indent=2)
+    OUTPUT_JSON.parent.mkdir(parents=True, exist_ok=True)
 
-    print("OCR lines loaded:", len(records))
-    print("Question groups created:", len(groups))
+    with OUTPUT_JSON.open("w", encoding="utf-8") as file:
+        json.dump(
+            groups,
+            file,
+            ensure_ascii=False,
+            indent=2,
+        )
+
+    print("PaddleOCR lines loaded:", len(records))
+    print("Question-answer groups created:", len(groups))
     print("Output saved to:", OUTPUT_JSON)
 
+    # Display a short preview of the results.
     for group in groups[:10]:
         print(
             f"\nPage: {group['page']} | "
             f"Question: {group['question_number']} | "
-            f"Subpart: {group['subpart']}"
+            f"Lines: {len(group['lines'])}"
         )
-        print("Grouped text:", group["answer_text"][:200])
+
+        print("Answer:", group["answer_text"][:300])
 
 
 if __name__ == "__main__":
