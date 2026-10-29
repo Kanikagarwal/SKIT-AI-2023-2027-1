@@ -1,3 +1,4 @@
+
 from evaluation_ai.app.evaluation_module.keyword_extraction import (
     KeywordExtractor
 )
@@ -5,23 +6,20 @@ from evaluation_ai.app.evaluation_module.keyword_matching import KeywordMatcher
 from evaluation_ai.app.evaluation_module.semantic_similarity import (
     SemanticSimilarity
 )
+from evaluation_ai.app.evaluation_module.scoring import AnswerScorer
 
 
 class AnswerEvaluator:
     """
-    Evaluates student answers against the model answer and keywords.
-
-    This module produces evaluation evidence for the September
-    Answer Evaluation phase.
-
-    Final marks, rubric-based scoring and feedback generation
-    are handled in later project phases.
+    Evaluates student answers using keyword matching,
+    semantic similarity, and a scoring component.
     """
 
     def __init__(self, answer_key=None):
         self.keyword_matcher = KeywordMatcher()
         self.keyword_extractor = KeywordExtractor()
         self.semantic_similarity = SemanticSimilarity()
+        self.scorer = AnswerScorer()
 
         if answer_key is not None:
             self.semantic_similarity.cache_model_answers(
@@ -29,9 +27,7 @@ class AnswerEvaluator:
             )
 
     def evaluate_question(self, question, student_answer):
-        """
-        Evaluate one attempted question.
-        """
+        """Evaluate one attempted question."""
 
         if student_answer is None:
             student_answer = ""
@@ -47,11 +43,16 @@ class AnswerEvaluator:
         )
 
         semantic_score = (
-            self.semantic_similarity
-            .calculate_similarity_with_cached_model(
+            self.semantic_similarity.calculate_similarity_with_cached_model(
                 question_id,
                 student_answer
             )
+        )
+
+        marks_awarded = self.scorer.calculate_score(
+            keyword_score=keyword_result["keyword_score"],
+            semantic_similarity_score=semantic_score,
+            max_marks=question.get("max_marks", 0)
         )
 
         return {
@@ -60,18 +61,16 @@ class AnswerEvaluator:
                 "missing_keywords": keyword_result["missing_keywords"],
                 "keyword_score": keyword_result["keyword_score"]
             },
-            "semantic_similarity_score": semantic_score
+            "semantic_similarity_score": semantic_score,
+            "marks_awarded": marks_awarded
         }
 
     def evaluate(self, answer_key, student_submission):
-        """
-        Evaluate all attempted questions for one student.
-        """
+        """Evaluate all questions and calculate total marks."""
 
         exam_id = answer_key.get("exam_id")
         student = student_submission.get("student", {})
         student_answers = student_submission.get("answers", {})
-
         questions = answer_key.get("questions", [])
 
         results = {
@@ -80,7 +79,8 @@ class AnswerEvaluator:
                 "roll_no": student.get("roll_no"),
                 "name": student.get("name")
             },
-            "questions": []
+            "questions": [],
+            "total_marks_awarded": 0.0
         }
 
         for question in questions:
@@ -108,13 +108,19 @@ class AnswerEvaluator:
             if not attempted:
                 question_result["evaluation"] = None
             else:
-                question_result["evaluation"] = (
-                    self.evaluate_question(
-                        question,
-                        student_answer
-                    )
+                question_result["evaluation"] = self.evaluate_question(
+                    question,
+                    student_answer
+                )
+
+                results["total_marks_awarded"] += (
+                    question_result["evaluation"]["marks_awarded"]
                 )
 
             results["questions"].append(question_result)
+
+        results["total_marks_awarded"] = round(
+            results["total_marks_awarded"], 2
+        )
 
         return results
