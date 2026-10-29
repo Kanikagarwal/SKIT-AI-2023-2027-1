@@ -185,16 +185,6 @@ function Login() {
             </div>
           </div>
 
-          <p className="text-center text-xs text-slate-500">
-            Don't have an account?{" "}
-            <Link
-              to="/register"
-              className="font-semibold text-blue-600 hover:text-blue-700"
-            >
-              Create account
-            </Link>
-          </p>
-
         </div>
 
         <p className="text-center text-[10px] text-slate-400 mt-1.5">

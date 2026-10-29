@@ -39,3 +39,14 @@ trocr-venv/
 __pycache__/
 *.pyc
 backend/*.db
+
+# Local OCR virtual environments
+/ai-module/app/ocr-module/dbnet-venv/
+/ai-module/app/ocr-module/kraken-venv/
+
+# Generated OCR data
+/ai-module/app/ocr-module/data/Social_Science_processed/
+/ai-module/app/ocr-module/data/all_pages_trocr_results.json
+/ai-module/app/ocr-module/data/automatic_corrected_results.json
+/ai-module/app/ocr-module/data/corrected_ocr_results.json
+/ai-module/data/

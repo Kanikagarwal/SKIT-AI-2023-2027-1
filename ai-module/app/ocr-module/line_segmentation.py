@@ -218,7 +218,7 @@ class LineSegmenter:
     def merge_close_bands(
         self,
         line_regions: List[Tuple[int, int]],
-        max_gap: int = 12
+        max_gap: int = 5
     ) -> List[Tuple[int, int]]:
         """
         Merge nearby horizontal regions.
