@@ -1,133 +1,261 @@
+
 from pathlib import Path
 import json
+import time
+import shutil
 
 import cv2
 import numpy as np
+import paddle
 from paddleocr import TextDetection
 
-# --------------------------------------------------
-# PATHS
-# --------------------------------------------------
 
-DATA_DIR = Path(
-    r"C:\Users\Lenovo\Desktop\EvalAI\ai-module\app\ocr-module\data\Social_Science_processed"
+# ============================================================
+# CONFIGURATION
+# ============================================================
+
+# Input: original-resolution preprocessed page images
+INPUT_DIR = Path("/content/evalai_input")
+
+# Temporary processing directory on Colab
+OUTPUT_DIR = Path("/content/evalai_dbnet_output")
+
+# Permanent output directory on Google Drive
+DRIVE_OUTPUT_DIR = Path(
+    "/content/drive/MyDrive/EvalAI/DBNet_Output"
 )
 
-# One output folder per page will be created inside DATA_DIR.
-# Example: page_01_dbnet_lines/
+BATCH_SIZE = 2
 
-# --------------------------------------------------
-# HELPER: CONVERT PADDLEOCR OUTPUT TO A DICTIONARY
-# --------------------------------------------------
+CROP_PADDING = 3
 
-def get_result_dict(result):
-    """
-    PaddleOCR 3.x results may be result objects or dictionaries.
-    Convert them into a dictionary so we can read dt_polys.
-    """
-    if isinstance(result, dict):
-        return result
+SAVE_VISUALIZATIONS = False
 
-    # PaddleOCR result objects commonly expose a json property.
-    json_data = getattr(result, "json", None)
+RESUME = True
 
-    if callable(json_data):
-        json_data = json_data()
 
-    if isinstance(json_data, dict):
-        return json_data
+# ============================================================
+# GPU CONFIGURATION
+# ============================================================
 
-    raise TypeError(
-        f"Unsupported PaddleOCR result type: {type(result)}"
+if not paddle.is_compiled_with_cuda():
+    raise RuntimeError(
+        "GPU-enabled PaddlePaddle is not installed. "
+        "Check your PaddlePaddle installation."
     )
 
-def extract_polygons(result):
-    """
-    Extract detected text polygons from PaddleOCR output.
-    Handles the common PaddleOCR 3.x result structure.
-    """
-    data = get_result_dict(result)
+paddle.set_device("gpu")
 
-    # Some versions wrap the actual result in "res".
-    inner = data.get("res", data)
+print("Paddle version:", paddle.__version__)
+print("Device:", paddle.device.get_device())
 
-    if not isinstance(inner, dict):
-        raise ValueError("Unexpected PaddleOCR result structure.")
 
-    polygons = inner.get("dt_polys")
+# ============================================================
+# CREATE DIRECTORIES
+# ============================================================
+
+INPUT_DIR.mkdir(parents=True, exist_ok=True)
+OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+DRIVE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+
+
+# ============================================================
+# RESTORE PREVIOUS OUTPUTS FOR RESUMING
+# ============================================================
+
+if RESUME and any(DRIVE_OUTPUT_DIR.iterdir()):
+
+    print("Restoring previously completed outputs...")
+
+    shutil.copytree(
+        DRIVE_OUTPUT_DIR,
+        OUTPUT_DIR,
+        dirs_exist_ok=True
+    )
+
+
+# ============================================================
+# LOAD DBNET MODEL ONCE
+# ============================================================
+
+print("\nLoading DBNet text detection model...")
+
+detector = TextDetection(device="gpu")
+
+print("DBNet model loaded successfully.")
+
+
+# ============================================================
+# EXTRACT PADDLEOCR RESULT
+# ============================================================
+
+def get_result_dict(prediction):
+
+    if hasattr(prediction, "json"):
+        data = prediction.json
+    else:
+        data = prediction
+
+    if isinstance(data, str):
+        data = json.loads(data)
+
+    if not isinstance(data, dict):
+        return {}
+
+    if "res" in data:
+        data = data["res"]
+
+    return data
+
+
+def extract_polygons(prediction):
+
+    data = get_result_dict(prediction)
+
+    polygons = data.get("dt_polys", [])
 
     if polygons is None:
-        polygons = inner.get("polys")
+        return [], []
 
-    if polygons is None:
-        print("Warning: No dt_polys field found.")
-        print("Available keys:", list(inner.keys()))
-        return []
+    polygons = np.asarray(polygons)
 
-    return list(polygons)
+    if polygons.size == 0:
+        return [], []
 
-# --------------------------------------------------
-# HELPER: ORDER POLYGON POINTS
-# --------------------------------------------------
+    polygons = polygons.reshape(-1, 4, 2)
+
+    scores = data.get("dt_scores", [])
+
+    if scores is None:
+        scores = []
+
+    if len(scores) != len(polygons):
+        scores = [None] * len(polygons)
+
+    return polygons, scores
+
+
+# ============================================================
+# ORDER QUADRILATERAL POINTS
+# ============================================================
 
 def order_points(points):
-    """
-    Return four points in top-left, top-right,
-    bottom-right, bottom-left order.
-    """
-    points = np.asarray(points, dtype=np.float32).reshape(4, 2)
 
-    sums = points.sum(axis=1)
-    differences = np.diff(points, axis=1).reshape(-1)
-
-    top_left = points[np.argmin(sums)]
-    bottom_right = points[np.argmax(sums)]
-    top_right = points[np.argmin(differences)]
-    bottom_left = points[np.argmax(differences)]
-
-    return np.array(
-        [top_left, top_right, bottom_right, bottom_left],
+    points = np.asarray(
+        points,
         dtype=np.float32
     )
 
-# --------------------------------------------------
-# HELPER: CROP A TEXT REGION USING ITS POLYGON
-# --------------------------------------------------
+    rect = np.zeros((4, 2), dtype=np.float32)
 
-def crop_polygon(image, polygon, padding=3):
-    """
-    Perspective-crop a detected text region.
-    Returns the crop, or None if the polygon is invalid.
-    """
-    points = np.asarray(polygon, dtype=np.float32).reshape(-1, 2)
+    sums = points.sum(axis=1)
+    diffs = np.diff(points, axis=1).reshape(-1)
 
-    if len(points) != 4:
-        # This script expects quadrilateral text detections.
+    rect[0] = points[np.argmin(sums)]
+    rect[2] = points[np.argmax(sums)]
+
+    rect[1] = points[np.argmin(diffs)]
+    rect[3] = points[np.argmax(diffs)]
+
+    return rect
+
+
+# ============================================================
+# SORT POLYGONS IN READING ORDER
+# ============================================================
+
+def sort_polygons(polygons, scores):
+
+    items = []
+
+    for polygon, score in zip(polygons, scores):
+
+        polygon = np.asarray(
+            polygon,
+            dtype=np.float32
+        )
+
+        center_y = float(
+            np.mean(polygon[:, 1])
+        )
+
+        center_x = float(
+            np.mean(polygon[:, 0])
+        )
+
+        items.append(
+            (center_y, center_x, polygon, score)
+        )
+
+    items.sort(
+        key=lambda item: (
+            item[0],
+            item[1]
+        )
+    )
+
+    return [
+        (item[2], item[3])
+        for item in items
+    ]
+
+
+# ============================================================
+# CROP DETECTED TEXT REGION
+# ============================================================
+
+def crop_polygon(image, polygon):
+
+    height, width = image.shape[:2]
+
+    rect = order_points(polygon)
+
+    # Keep coordinates within original page boundaries.
+    rect[:, 0] = np.clip(
+        rect[:, 0],
+        0,
+        width - 1
+    )
+
+    rect[:, 1] = np.clip(
+        rect[:, 1],
+        0,
+        height - 1
+    )
+
+    tl, tr, br, bl = rect
+
+    crop_width = int(
+        max(
+            np.linalg.norm(br - bl),
+            np.linalg.norm(tr - tl)
+        )
+    )
+
+    crop_height = int(
+        max(
+            np.linalg.norm(tr - br),
+            np.linalg.norm(tl - bl)
+        )
+    )
+
+    if crop_width < 2 or crop_height < 2:
         return None
-
-    rect = order_points(points)
-
-    top_left, top_right, bottom_right, bottom_left = rect
-
-    width_top = np.linalg.norm(top_right - top_left)
-    width_bottom = np.linalg.norm(bottom_right - bottom_left)
-    height_left = np.linalg.norm(bottom_left - top_left)
-    height_right = np.linalg.norm(bottom_right - top_right)
-
-    crop_width = max(1, int(round(max(width_top, width_bottom))))
-    crop_height = max(1, int(round(max(height_left, height_right))))
 
     destination = np.array(
         [
             [0, 0],
             [crop_width - 1, 0],
             [crop_width - 1, crop_height - 1],
-            [0, crop_height - 1],
+            [0, crop_height - 1]
         ],
         dtype=np.float32
     )
 
-    matrix = cv2.getPerspectiveTransform(rect, destination)
+    matrix = cv2.getPerspectiveTransform(
+        rect,
+        destination
+    )
 
     crop = cv2.warpPerspective(
         image,
@@ -137,187 +265,469 @@ def crop_polygon(image, polygon, padding=3):
         borderMode=cv2.BORDER_REPLICATE
     )
 
-    # Small white border helps keep handwriting near the crop edge.
-    if padding > 0:
+    if CROP_PADDING > 0:
+
         crop = cv2.copyMakeBorder(
             crop,
-            padding,
-            padding,
-            padding,
-            padding,
+            CROP_PADDING,
+            CROP_PADDING,
+            CROP_PADDING,
+            CROP_PADDING,
             cv2.BORDER_CONSTANT,
-            value=255 if crop.ndim == 2 else (255, 255, 255)
+            value=255
         )
 
     return crop
 
-# --------------------------------------------------
-# HELPER: SORT DETECTIONS TOP TO BOTTOM
-# --------------------------------------------------
 
-def sort_polygons(polygons):
-    """
-    Sort by vertical center, then horizontal position.
-    This gives a reasonable reading order for mostly
-    single-column handwritten answer sheets.
-    """
-    valid = []
+# ============================================================
+# CHECK COMPLETED PAGE
+# ============================================================
 
-    for polygon in polygons:
-        try:
-            points = np.asarray(polygon, dtype=np.float32).reshape(-1, 2)
+def page_is_complete(page_output_dir):
 
-            if len(points) < 4 or not np.isfinite(points).all():
-                continue
-
-            x_min = float(points[:, 0].min())
-            y_min = float(points[:, 1].min())
-            y_max = float(points[:, 1].max())
-            center_y = (y_min + y_max) / 2.0
-
-            valid.append((center_y, x_min, polygon))
-
-        except (TypeError, ValueError):
-            continue
-
-    valid.sort(key=lambda item: (item[0], item[1]))
-
-    return [item[2] for item in valid]
-
-# --------------------------------------------------
-# PROCESS ONE PAGE
-# --------------------------------------------------
-
-def process_page(detector, image_path):
-    print(f"\nProcessing: {image_path.name}")
-
-    image = cv2.imread(str(image_path), cv2.IMREAD_GRAYSCALE)
-
-    if image is None:
-        print(f"ERROR: Could not read {image_path}")
-        return
-
-    page_name = image_path.stem.replace("_preprocessed", "")
-
-    output_dir = DATA_DIR / f"{page_name}_dbnet_lines"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    visualization_path = (
-        DATA_DIR / f"{page_name}_dbnet_visualization.png"
+    json_path = (
+        page_output_dir /
+        "detected_polygons.json"
     )
 
-    polygons_json_path = output_dir / "detected_polygons.json"
+    if not json_path.exists():
+        return False
 
-    # Run text detection.
-    predictions = detector.predict(str(image_path))
+    try:
 
-    all_polygons = []
+        with open(
+            json_path,
+            "r",
+            encoding="utf-8"
+        ) as f:
 
-    for prediction in predictions:
-        all_polygons.extend(extract_polygons(prediction))
+            data = json.load(f)
 
-    polygons = sort_polygons(all_polygons)
+        for item in data.get("detections", []):
 
-    # Create a color image for the detection visualization.
-    visualization = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
+            crop_path = (
+                page_output_dir /
+                item["crop_file"]
+            )
 
-    saved_polygons = []
-    crop_count = 0
+            if not crop_path.exists():
+                return False
 
-    for polygon_index, polygon in enumerate(polygons, start=1):
-        points = np.asarray(polygon, dtype=np.float32).reshape(-1, 2)
+        return True
 
-        if len(points) < 4 or not np.isfinite(points).all():
-            continue
+    except Exception:
+        return False
 
-        # Draw the detection polygon.
-        integer_points = np.round(points).astype(np.int32)
-        cv2.polylines(
-            visualization,
-            [integer_points],
-            isClosed=True,
-            color=(0, 255, 0),
-            thickness=2
+
+# ============================================================
+# PROCESS ONE PAGE
+# ============================================================
+
+def process_page(image_path, prediction):
+
+    start_time = time.time()
+
+    # Read original-resolution image.
+    image = cv2.imread(
+        str(image_path),
+        cv2.IMREAD_GRAYSCALE
+    )
+
+    if image is None:
+
+        raise ValueError(
+            f"Could not read image: {image_path}"
         )
 
-        crop = crop_polygon(image, polygon, padding=3)
+    page_output_dir = (
+        OUTPUT_DIR /
+        f"{image_path.stem}_dbnet_lines"
+    )
 
-        if crop is None or crop.size == 0:
-            print(f"Skipping invalid detection {polygon_index}")
+    page_output_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # Remove stale crop files before reprocessing.
+    for old_crop in page_output_dir.glob("line_*.png"):
+        old_crop.unlink()
+
+    polygons, scores = extract_polygons(
+        prediction
+    )
+
+    sorted_items = sort_polygons(
+        polygons,
+        scores
+    )
+
+    detections = []
+
+    visualization = None
+
+    if SAVE_VISUALIZATIONS:
+
+        visualization = cv2.cvtColor(
+            image,
+            cv2.COLOR_GRAY2BGR
+        )
+
+    crop_index = 0
+
+    for polygon, score in sorted_items:
+
+        crop = crop_polygon(
+            image,
+            polygon
+        )
+
+        if crop is None:
             continue
 
-        crop_count += 1
-        crop_path = output_dir / f"line_{crop_count:04d}.png"
+        crop_index += 1
 
-        if not cv2.imwrite(str(crop_path), crop):
-            print(f"WARNING: Could not save {crop_path.name}")
-            crop_count -= 1
-            continue
+        crop_name = (
+            f"line_{crop_index:04d}.png"
+        )
 
-        saved_polygons.append(
+        crop_path = (
+            page_output_dir / crop_name
+        )
+
+        success = cv2.imwrite(
+            str(crop_path),
+            crop
+        )
+
+        if not success:
+
+            raise IOError(
+                f"Failed to save crop: {crop_path}"
+            )
+
+        detections.append(
             {
-                "crop_file": crop_path.name,
-                "polygon": points.tolist()
+                "crop_file": crop_name,
+                "polygon": np.asarray(
+                    polygon
+                ).tolist(),
+                "confidence": (
+                    float(score)
+                    if score is not None
+                    else None
+                )
             }
         )
 
-    # Save the visualization and polygon metadata.
-    if not cv2.imwrite(str(visualization_path), visualization):
-        print(f"WARNING: Could not save visualization {visualization_path}")
+        if visualization is not None:
 
-    with open(polygons_json_path, "w", encoding="utf-8") as file:
-        json.dump(saved_polygons, file, indent=2)
+            cv2.polylines(
+                visualization,
+                [
+                    np.asarray(
+                        polygon,
+                        dtype=np.int32
+                    )
+                ],
+                True,
+                (0, 255, 0),
+                2
+            )
 
-    print(f"Detected polygons: {len(polygons)}")
-    print(f"Saved text crops: {crop_count}")
-    print(f"Crops folder: {output_dir}")
-    print(f"Visualization: {visualization_path.name}")
+    # Save page metadata.
+    metadata = {
+        "page_name": image_path.name,
+        "image_width": int(image.shape[1]),
+        "image_height": int(image.shape[0]),
+        "total_detections": len(detections),
+        "detections": detections
+    }
 
-# --------------------------------------------------
-# MAIN: PROCESS EVERY PREPROCESSED PAGE
-# --------------------------------------------------
-
-def main():
-    if not DATA_DIR.exists():
-        raise FileNotFoundError(
-            f"Input folder does not exist: {DATA_DIR}\n"
-            "Run preprocess_pdf.py first."
-        )
-
-    image_paths = sorted(
-        DATA_DIR.glob("page_*_preprocessed.png")
+    json_path = (
+        page_output_dir /
+        "detected_polygons.json"
     )
 
-    if not image_paths:
-        raise FileNotFoundError(
-            f"No preprocessed page images found in {DATA_DIR}"
+    temporary_json = (
+        page_output_dir /
+        "detected_polygons.tmp"
+    )
+
+    with open(
+        temporary_json,
+        "w",
+        encoding="utf-8"
+    ) as f:
+
+        json.dump(
+            metadata,
+            f,
+            indent=2,
+            ensure_ascii=False
         )
 
-    print("=" * 60)
-    print("DBNet / PaddleOCR TEXT DETECTION - ALL PAGES")
-    print("=" * 60)
-    print(f"Pages found: {len(image_paths)}")
-    print(f"Input folder: {DATA_DIR}")
+    temporary_json.replace(json_path)
 
-    # Initialize the detector once, then reuse it for all pages.
-    print("\nLoading PaddleOCR text detector...")
-    detector = TextDetection()
+    # Save visualization only when enabled.
+    if visualization is not None:
 
-    for page_number, image_path in enumerate(image_paths, start=1):
-        print(f"\n{'-' * 50}")
-        print(f"PAGE {page_number}/{len(image_paths)}")
-        print("-" * 50)
+        visualization_path = (
+            OUTPUT_DIR /
+            f"{image_path.stem}_dbnet_visualization.png"
+        )
 
-        try:
-            process_page(detector, image_path)
-        except Exception as error:
-            print(f"ERROR processing {image_path.name}: {error}")
-            print("Continuing to the next page.")
+        cv2.imwrite(
+            str(visualization_path),
+            visualization
+        )
 
-    print("\n" + "=" * 60)
-    print("BATCH PROCESSING FINISHED")
-    print(f"Check output folders in: {DATA_DIR}")
-    print("=" * 60)
+    elapsed = time.time() - start_time
 
-if __name__ == "__main__":
-    main()
+    print(
+        f"{image_path.name} | "
+        f"Crops: {len(detections)} | "
+        f"Time: {elapsed:.2f}s"
+    )
+
+    return page_output_dir, len(detections)
+
+
+# ============================================================
+# COPY COMPLETED PAGE TO DRIVE
+# ============================================================
+
+def sync_page_to_drive(page_output_dir):
+
+    destination = (
+        DRIVE_OUTPUT_DIR /
+        page_output_dir.name
+    )
+
+    shutil.copytree(
+        page_output_dir,
+        destination,
+        dirs_exist_ok=True
+    )
+
+    if SAVE_VISUALIZATIONS:
+
+        page_name = (
+            page_output_dir.name.replace(
+                "_dbnet_lines",
+                ""
+            )
+        )
+
+        visualization_path = (
+            OUTPUT_DIR /
+            f"{page_name}_dbnet_visualization.png"
+        )
+
+        if visualization_path.exists():
+
+            shutil.copy2(
+                visualization_path,
+                DRIVE_OUTPUT_DIR /
+                visualization_path.name
+            )
+
+
+# ============================================================
+# GET INPUT PAGES
+# ============================================================
+
+page_paths = sorted(
+    INPUT_DIR.glob(
+        "page_*_preprocessed.png"
+    )
+)
+
+if not page_paths:
+
+    raise FileNotFoundError(
+        f"No page images found in {INPUT_DIR}"
+    )
+
+print("\nTotal pages:", len(page_paths))
+
+
+# ============================================================
+# SKIP COMPLETED PAGES
+# ============================================================
+
+pending_pages = []
+
+for image_path in page_paths:
+
+    page_output_dir = (
+        OUTPUT_DIR /
+        f"{image_path.stem}_dbnet_lines"
+    )
+
+    if RESUME and page_is_complete(page_output_dir):
+
+        print(
+            "Already completed:",
+            image_path.name
+        )
+
+    else:
+
+        pending_pages.append(image_path)
+
+
+print("Remaining pages:", len(pending_pages))
+
+
+# ============================================================
+# BATCH PROCESSING
+# ============================================================
+
+total_start = time.time()
+
+total_processed = 0
+total_crops = 0
+
+for batch_start in range(
+    0,
+    len(pending_pages),
+    BATCH_SIZE
+):
+
+    batch_paths = pending_pages[
+        batch_start:
+        batch_start + BATCH_SIZE
+    ]
+
+    print("\n================================")
+    print("New batch")
+
+    for path in batch_paths:
+        print(path.name)
+
+    batch_start_time = time.time()
+
+    # GPU batch inference.
+    try:
+
+        predictions = list(
+            detector.predict(
+                [
+                    str(path)
+                    for path in batch_paths
+                ],
+                batch_size=len(batch_paths)
+            )
+        )
+
+        if len(predictions) != len(batch_paths):
+
+            raise RuntimeError(
+                "Prediction count does not match batch size."
+            )
+
+    except Exception as batch_error:
+
+        print(
+            "Batch inference failed:",
+            str(batch_error)
+        )
+
+        print("Retrying pages individually...")
+
+        predictions = []
+
+        for path in batch_paths:
+
+            single_prediction = list(
+                detector.predict(
+                    str(path),
+                    batch_size=1
+                )
+            )
+
+            if len(single_prediction) != 1:
+
+                raise RuntimeError(
+                    f"Unexpected prediction result for {path}"
+                )
+
+            predictions.append(
+                single_prediction[0]
+            )
+
+    inference_time = (
+        time.time() - batch_start_time
+    )
+
+    print(
+        "Inference time:",
+        round(inference_time, 2),
+        "seconds"
+    )
+
+    # Crop and save every page.
+    for image_path, prediction in zip(
+        batch_paths,
+        predictions
+    ):
+
+        output_folder, crop_count = process_page(
+            image_path,
+            prediction
+        )
+
+        # Persist output after each page.
+        sync_page_to_drive(output_folder)
+
+        total_processed += 1
+        total_crops += crop_count
+
+    print(
+        f"Completed: {total_processed}/"
+        f"{len(pending_pages)}"
+    )
+
+
+# ============================================================
+# FINAL SUMMARY
+# ============================================================
+
+total_time = time.time() - total_start
+
+print("\n========== DBNET SUMMARY ==========")
+
+print("Pages processed:", total_processed)
+print("Total crops:", total_crops)
+
+print(
+    "Average crops per page:",
+    round(
+        total_crops / max(total_processed, 1),
+        2
+    )
+)
+
+print(
+    "Total time:",
+    round(total_time / 60, 2),
+    "minutes"
+)
+
+print(
+    "Average time per page:",
+    round(
+        total_time / max(total_processed, 1),
+        2
+    ),
+    "seconds"
+)
+
+print(
+    "Permanent output:",
+    DRIVE_OUTPUT_DIR
+)
+
+print("===================================")
