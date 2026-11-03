@@ -1,18 +1,23 @@
-
 class AnswerScorer:
     """
     Converts keyword and semantic evaluation evidence into marks.
 
-    The initial weights are configurable baseline assumptions
-    and must be validated against teacher-awarded marks.
+    Default weights are based on exploratory Linear Regression
+    experiments using the MohlerASAG dataset.
     """
 
-    def __init__(self, keyword_weight=0.5, semantic_weight=0.5):
+    def __init__(
+        self,
+        keyword_weight=0.325,
+        semantic_weight=0.675
+    ):
         if keyword_weight < 0 or semantic_weight < 0:
             raise ValueError("Scoring weights cannot be negative.")
 
         if keyword_weight + semantic_weight <= 0:
-            raise ValueError("At least one scoring weight must be positive.")
+            raise ValueError(
+                "At least one scoring weight must be positive."
+            )
 
         self.keyword_weight = keyword_weight
         self.semantic_weight = semantic_weight
