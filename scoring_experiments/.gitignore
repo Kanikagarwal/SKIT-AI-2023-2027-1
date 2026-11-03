@@ -1,0 +1,16 @@
+# Downloaded research datasets
+datasets/raw/*
+datasets/processed/*
+
+# Keep folder structure
+!datasets/raw/.gitkeep
+!datasets/processed/.gitkeep
+
+# Experiment outputs
+results/*
+!results/.gitkeep
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
