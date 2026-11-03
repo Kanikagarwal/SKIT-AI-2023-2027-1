@@ -1,10 +1,11 @@
-# Downloaded research datasets
+# Downloaded research dataset (keep local, don't commit)
 datasets/raw/*
-datasets/processed/*
-
-# Keep folder structure
 !datasets/raw/.gitkeep
+
+# Generated feature dataset (include in Git)
+datasets/processed/*
 !datasets/processed/.gitkeep
+!datasets/processed/feature_dataset.csv
 
 # Experiment outputs
 results/*
