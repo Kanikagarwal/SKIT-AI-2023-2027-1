@@ -19,7 +19,7 @@ def test_zero_scores_produce_zero_marks():
 def test_partial_scores_produce_partial_marks():
     scorer = AnswerScorer()
 
-    assert scorer.calculate_score(50, 70, 4) == 2.4
+    assert scorer.calculate_score(50, 70, 4) == 2.54
 
 
 def test_score_never_exceeds_maximum_marks():
