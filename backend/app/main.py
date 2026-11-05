@@ -13,6 +13,7 @@ from app.models.answer_sheet import AnswerSheet
 from app.api.routes.exams import router as exams_router
 from app.api.routes.answer_sheet import router as answer_sheet_router
 from app.models.evaluation import Evaluation
+from fastapi.middleware.cors import CORSMiddleware
 ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 load_dotenv(ENV_FILE)
 Base.metadata.create_all(bind=engine)
@@ -23,6 +24,18 @@ app = FastAPI(
     description="AI-powered theory exam evaluation system",
     version="1.0.0"
 )
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+) 
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[

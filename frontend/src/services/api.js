@@ -1,18 +1,24 @@
+
 const API_BASE_URL = "http://127.0.0.1:8000";
 
 export const getAllUsers = async () => {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Authentication token not found. Please log in again.");
+  }
 
   const response = await fetch(`${API_BASE_URL}/api/users/`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
     },
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch users");
+    const error = await response.json();
+    throw new Error(error.detail || "Failed to fetch users");
   }
 
   return response.json();
