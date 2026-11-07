@@ -1,30 +1,39 @@
 
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { getAllUsers } from "../services/api";
+import {
+  getAllUsers,
+  getEvaluationStats
+} from "../services/api";
 
 function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [evaluationCount, setEvaluationCount] = useState(0);
+const fetchDashboardData = async () => {
+  try {
+    setLoading(true);
+    setError("");
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      setError("");
+    const [usersData, evaluationData] = await Promise.all([
+      getAllUsers(),
+      getEvaluationStats()
+    ]);
 
-      const data = await getAllUsers();
-      setUsers(data);
-    } catch (err) {
-      setError(err.message || "Failed to fetch users");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setUsers(usersData);
+    setEvaluationCount(evaluationData.total_evaluations);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  } catch (err) {
+    setError(err.message || "Failed to fetch dashboard data");
+  } finally {
+    setLoading(false);
+  }
+};
+
+ useEffect(() => {
+  fetchDashboardData();
+}, []);
 
   const totalUsers = users.length;
 
@@ -54,7 +63,7 @@ function AdminDashboard() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={fetchUsers}
+              onClick={fetchDashboardData}
               disabled={loading}
               className="border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
             >
@@ -130,7 +139,7 @@ function AdminDashboard() {
               </p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
-                128
+                {loading ? "..." : error ? "--" : evaluationCount}
               </p>
 
               <p className="text-[10px] text-blue-600 mt-1">

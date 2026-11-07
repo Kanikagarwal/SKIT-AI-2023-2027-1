@@ -24,3 +24,31 @@ export const getAllUsers = async () => {
 
   return response.json();
 };
+
+
+export const getEvaluationStats = async () => {
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Admin token not found. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/answer-sheets/evaluation-stats`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "Failed to fetch evaluation statistics");
+  }
+
+  return data;
+};

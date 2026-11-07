@@ -252,3 +252,17 @@ def save_evaluation_result(
             for item in saved_evaluations
         ]
     }
+
+
+@router.get("/evaluation-stats")
+def get_evaluation_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    total_evaluations = db.query(Evaluation).count()
+
+    return {
+        "total_evaluations": total_evaluations
+    }
