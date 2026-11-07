@@ -1,13 +1,47 @@
-import { Link } from "react-router-dom"
+
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { getAllUsers } from "../services/api";
 
 function AdminDashboard() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const data = await getAllUsers();
+      setUsers(data);
+    } catch (err) {
+      setError(err.message || "Failed to fetch users");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const totalUsers = users.length;
+
+  const totalTeachers = users.filter(
+    (user) => user.role === "TEACHER"
+  ).length;
+
+  const totalStudents = users.filter(
+    (user) => user.role === "STUDENT"
+  ).length;
+
   return (
     <div className="min-h-screen bg-slate-50">
-
       <main className="min-h-screen overflow-hidden">
 
+        {/* Header */}
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-7">
-
           <div>
             <h1 className="text-lg font-bold text-slate-900">
               Admin Dashboard
@@ -18,17 +52,34 @@ function AdminDashboard() {
             </p>
           </div>
 
-          <Link
-            to="/"
-            className="border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition"
-          >
-            Back to Login
-          </Link>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={fetchUsers}
+              disabled={loading}
+              className="border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition disabled:opacity-50"
+            >
+              {loading ? "Refreshing..." : "Refresh"}
+            </button>
 
+            <Link
+              to="/"
+              className="border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition"
+            >
+              Back to Login
+            </Link>
+          </div>
         </header>
 
         <div className="p-7">
 
+          {/* Error Message */}
+          {error && (
+            <div className="mb-5 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
+              {error}
+            </div>
+          )}
+
+          {/* Statistics Cards */}
           <div className="grid grid-cols-4 gap-4 mb-5">
 
             <div className="bg-white border border-slate-200 rounded-xl p-4">
@@ -37,11 +88,11 @@ function AdminDashboard() {
               </p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
-                184
+                {loading ? "..." : error ? "--" : totalUsers}
               </p>
 
               <p className="text-[10px] text-emerald-600 mt-1">
-                Active platform users
+                Registered platform users
               </p>
             </div>
 
@@ -51,7 +102,7 @@ function AdminDashboard() {
               </p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
-                32
+                {loading ? "..." : error ? "--" : totalTeachers}
               </p>
 
               <p className="text-[10px] text-slate-400 mt-1">
@@ -65,7 +116,7 @@ function AdminDashboard() {
               </p>
 
               <p className="text-2xl font-bold text-slate-900 mt-2">
-                151
+                {loading ? "..." : error ? "--" : totalStudents}
               </p>
 
               <p className="text-[10px] text-slate-400 mt-1">
@@ -83,18 +134,18 @@ function AdminDashboard() {
               </p>
 
               <p className="text-[10px] text-blue-600 mt-1">
-                Created this semester
+                Placeholder statistic
               </p>
             </div>
 
           </div>
 
+          {/* Platform Overview and Quick Actions */}
           <div className="grid grid-cols-3 gap-5">
 
             <div className="col-span-2 bg-white border border-slate-200 rounded-xl p-5">
 
               <div className="flex items-center justify-between mb-5">
-
                 <div>
                   <h2 className="text-sm font-bold text-slate-900">
                     Platform Overview
@@ -108,7 +159,6 @@ function AdminDashboard() {
                 <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
                   System Active
                 </span>
-
               </div>
 
               <div className="space-y-4">
@@ -116,16 +166,16 @@ function AdminDashboard() {
                 <div>
                   <div className="flex justify-between mb-1">
                     <span className="text-xs text-slate-600">
-                      Active Users
+                      Registered Users
                     </span>
 
                     <span className="text-xs font-semibold text-slate-700">
-                      92%
+                      {loading ? "..." : totalUsers}
                     </span>
                   </div>
 
                   <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500 w-[92%] rounded-full"></div>
+                    <div className="h-full bg-emerald-500 w-full rounded-full"></div>
                   </div>
                 </div>
 
@@ -162,9 +212,9 @@ function AdminDashboard() {
                 </div>
 
               </div>
-
             </div>
 
+            {/* Quick Actions */}
             <div className="bg-white border border-slate-200 rounded-xl p-5">
 
               <h2 className="text-sm font-bold text-slate-900">
@@ -199,15 +249,14 @@ function AdminDashboard() {
                 </Link>
 
               </div>
-
             </div>
 
           </div>
 
+          {/* Recent Activity */}
           <div className="bg-white border border-slate-200 rounded-xl mt-5">
 
             <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-
               <div>
                 <h2 className="text-sm font-bold text-slate-900">
                   Recent Platform Activity
@@ -221,32 +270,30 @@ function AdminDashboard() {
               <span className="text-[10px] text-slate-400">
                 Recent
               </span>
-
             </div>
 
             <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100">
-
               <div>
                 <p className="text-xs font-semibold text-slate-700">
-                  New teacher registered
+                  User management
                 </p>
 
                 <p className="text-[10px] text-slate-400 mt-1">
-                  Teacher account activity
+                  {loading
+                    ? "Fetching user data..."
+                    : `${totalUsers} registered users on the platform`}
                 </p>
               </div>
 
               <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md">
-                User
+                Users
               </span>
-
             </div>
 
             <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100">
-
               <div>
                 <p className="text-xs font-semibold text-slate-700">
-                  Theory evaluation completed
+                  Theory evaluation
                 </p>
 
                 <p className="text-[10px] text-slate-400 mt-1">
@@ -255,37 +302,32 @@ function AdminDashboard() {
               </div>
 
               <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
-                Completed
+                Evaluation
               </span>
-
             </div>
 
             <div className="px-5 py-3 flex items-center justify-between">
-
               <div>
                 <p className="text-xs font-semibold text-slate-700">
-                  Answer sheets uploaded
+                  Answer sheets
                 </p>
 
                 <p className="text-[10px] text-slate-400 mt-1">
-                  New answer sheet activity
+                  Answer sheet processing activity
                 </p>
               </div>
 
               <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-md">
                 Activity
               </span>
-
             </div>
 
           </div>
 
         </div>
-
       </main>
-
     </div>
-  )
+  );
 }
 
-export default AdminDashboard
+export default AdminDashboard;
