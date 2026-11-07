@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import {
   getAllUsers,
   getEvaluationStats,
-  getAnswerSheetStats
+  getAnswerSheetStats,
+  getRecentActivity
 } from "../services/api";
 
 function AdminDashboard() {
@@ -12,6 +13,7 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [evaluationCount, setEvaluationCount] = useState(0);
+  const [recentActivity, setRecentActivity] = useState([]);
   const [answerSheetStats, setAnswerSheetStats] = useState({
   total_answer_sheets: 0,
   ocr_completed: 0,
@@ -23,16 +25,22 @@ const fetchDashboardData = async () => {
     setLoading(true);
     setError("");
 
-    const [usersData, evaluationData, answerSheetData] =
-      await Promise.all([
-        getAllUsers(),
-        getEvaluationStats(),
-        getAnswerSheetStats()
-      ]);
+   const [
+  usersData,
+  evaluationData,
+  answerSheetData,
+  activityData
+] = await Promise.all([
+  getAllUsers(),
+  getEvaluationStats(),
+  getAnswerSheetStats(),
+  getRecentActivity()
+]);
 
-    setUsers(usersData);
-    setEvaluationCount(evaluationData.total_evaluations);
-    setAnswerSheetStats(answerSheetData);
+setUsers(usersData);
+setEvaluationCount(evaluationData.total_evaluations);
+setAnswerSheetStats(answerSheetData);
+setRecentActivity(activityData);
 
   } catch (err) {
     setError(err.message || "Failed to fetch dashboard data");
@@ -293,75 +301,80 @@ const fetchDashboardData = async () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="bg-white border border-slate-200 rounded-xl mt-5">
+          
+<div className="bg-white border border-slate-200 rounded-xl mt-5">
 
-            <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-              <div>
-                <h2 className="text-sm font-bold text-slate-900">
-                  Recent Platform Activity
-                </h2>
+  <div className="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+    <div>
+      <h2 className="text-sm font-bold text-slate-900">
+        Recent Platform Activity
+      </h2>
 
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Latest activity across EvalAI
-                </p>
-              </div>
+      <p className="text-[10px] text-slate-400 mt-1">
+        Latest activity across EvalAI
+      </p>
+    </div>
 
-              <span className="text-[10px] text-slate-400">
-                Recent
-              </span>
-            </div>
+    <span className="text-[10px] text-slate-400">
+      Recent
+    </span>
+  </div>
 
-            <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100">
-              <div>
-                <p className="text-xs font-semibold text-slate-700">
-                  User management
-                </p>
+  {loading ? (
+    <div className="px-5 py-4 text-xs text-slate-500">
+      Fetching recent activity...
+    </div>
+  ) : error ? (
+    <div className="px-5 py-4 text-xs text-red-500">
+      Unable to load recent activity.
+    </div>
+  ) : recentActivity.length === 0 ? (
+    <div className="px-5 py-4 text-xs text-slate-500">
+      No recent activity found.
+    </div>
+  ) : (
+    recentActivity.map((activity, index) => (
+      <div
+        key={activity.id}
+        className={`px-5 py-3 flex items-center justify-between ${
+          index !== recentActivity.length - 1
+            ? "border-b border-slate-100"
+            : ""
+        }`}
+      >
+        <div>
+          <p className="text-xs font-semibold text-slate-700">
+            Answer Sheet #{activity.id}
+          </p>
 
-                <p className="text-[10px] text-slate-400 mt-1">
-                  {loading
-                    ? "Fetching user data..."
-                    : `${totalUsers} registered users on the platform`}
-                </p>
-              </div>
+          <p className="text-[10px] text-slate-400 mt-1">
+            {activity.file_name || "Answer sheet uploaded"}
+          </p>
 
-              <span className="text-[10px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-md">
-                Users
-              </span>
-            </div>
+          <p className="text-[10px] text-slate-400 mt-1">
+            {new Date(activity.created_at).toLocaleString()}
+          </p>
 
-            <div className="px-5 py-3 flex items-center justify-between border-b border-slate-100">
-              <div>
-                <p className="text-xs font-semibold text-slate-700">
-                  Theory evaluation
-                </p>
+          <p className="text-[10px] text-slate-500 mt-1">
+            OCR: {activity.ocr_status || "PENDING"}
+          </p>
+        </div>
 
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Evaluation processing activity
-                </p>
-              </div>
+        <span
+          className={`text-[10px] font-semibold px-2.5 py-1 rounded-md ${
+            activity.evaluation_status === "COMPLETED"
+              ? "bg-emerald-50 text-emerald-700"
+              : "bg-amber-50 text-amber-700"
+          }`}
+        >
+          {activity.evaluation_status || "PENDING"}
+        </span>
+      </div>
+    ))
+  )}
 
-              <span className="text-[10px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-md">
-                Evaluation
-              </span>
-            </div>
+</div>
 
-            <div className="px-5 py-3 flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-slate-700">
-                  Answer sheets
-                </p>
-
-                <p className="text-[10px] text-slate-400 mt-1">
-                  Answer sheet processing activity
-                </p>
-              </div>
-
-              <span className="text-[10px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-md">
-                Activity
-              </span>
-            </div>
-
-          </div>
 
         </div>
       </main>

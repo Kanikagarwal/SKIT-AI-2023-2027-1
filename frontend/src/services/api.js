@@ -80,3 +80,30 @@ export const getAnswerSheetStats = async () => {
 
   return data;
 };
+
+export const getRecentActivity = async () => {
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Admin token not found. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/answer-sheets/recent-activity`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "Failed to fetch recent activity");
+  }
+
+  return data;
+};

@@ -303,3 +303,29 @@ def get_answer_sheet_stats(
         "evaluations_completed": evaluations_completed,
         "pending_evaluations": pending_evaluations
     }
+
+
+@router.get("/recent-activity")
+def get_recent_activity(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    answer_sheets = (
+        db.query(AnswerSheet)
+        .order_by(AnswerSheet.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    return [
+        {
+            "id": sheet.id,
+            "file_name": sheet.file_name,
+            "ocr_status": sheet.ocr_status,
+            "evaluation_status": sheet.evaluation_status,
+            "created_at": sheet.created_at
+        }
+        for sheet in answer_sheets
+    ]
