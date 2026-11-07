@@ -52,3 +52,31 @@ export const getEvaluationStats = async () => {
 
   return data;
 };
+
+
+export const getAnswerSheetStats = async () => {
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Admin token not found. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/answer-sheets/stats`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "Failed to fetch answer sheet statistics");
+  }
+
+  return data;
+};

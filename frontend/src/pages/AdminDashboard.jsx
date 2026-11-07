@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   getAllUsers,
-  getEvaluationStats
+  getEvaluationStats,
+  getAnswerSheetStats
 } from "../services/api";
 
 function AdminDashboard() {
@@ -11,18 +12,27 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [evaluationCount, setEvaluationCount] = useState(0);
+  const [answerSheetStats, setAnswerSheetStats] = useState({
+  total_answer_sheets: 0,
+  ocr_completed: 0,
+  evaluations_completed: 0,
+  pending_evaluations: 0
+});
 const fetchDashboardData = async () => {
   try {
     setLoading(true);
     setError("");
 
-    const [usersData, evaluationData] = await Promise.all([
-      getAllUsers(),
-      getEvaluationStats()
-    ]);
+    const [usersData, evaluationData, answerSheetData] =
+      await Promise.all([
+        getAllUsers(),
+        getEvaluationStats(),
+        getAnswerSheetStats()
+      ]);
 
     setUsers(usersData);
     setEvaluationCount(evaluationData.total_evaluations);
+    setAnswerSheetStats(answerSheetData);
 
   } catch (err) {
     setError(err.message || "Failed to fetch dashboard data");
@@ -189,36 +199,56 @@ const fetchDashboardData = async () => {
                 </div>
 
                 <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-slate-600">
-                      Evaluations Completed
-                    </span>
+  <div className="flex justify-between mb-1">
+    <span className="text-xs text-slate-600">
+      Evaluations Completed
+    </span>
 
-                    <span className="text-xs font-semibold text-slate-700">
-                      78%
-                    </span>
-                  </div>
+    <span className="text-xs font-semibold text-slate-700">
+      {loading ? "..." : error ? "--" : answerSheetStats.evaluations_completed}
+    </span>
+  </div>
 
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500 w-[78%] rounded-full"></div>
-                  </div>
-                </div>
+  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+    <div
+      className="h-full bg-blue-500 rounded-full transition-all duration-500"
+      style={{
+        width: `${
+          answerSheetStats.total_answer_sheets > 0
+            ? (answerSheetStats.evaluations_completed /
+                answerSheetStats.total_answer_sheets) * 100
+            : 0
+        }%`
+      }}
+    ></div>
+  </div>
+</div>
 
-                <div>
-                  <div className="flex justify-between mb-1">
-                    <span className="text-xs text-slate-600">
-                      Pending Evaluations
-                    </span>
+<div>
+  <div className="flex justify-between mb-1">
+    <span className="text-xs text-slate-600">
+      Pending Evaluations
+    </span>
 
-                    <span className="text-xs font-semibold text-slate-700">
-                      11%
-                    </span>
-                  </div>
+    <span className="text-xs font-semibold text-slate-700">
+      {loading ? "..." : error ? "--" : answerSheetStats.pending_evaluations}
+    </span>
+  </div>
 
-                  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
-                    <div className="h-full bg-amber-500 w-[11%] rounded-full"></div>
-                  </div>
-                </div>
+  <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+    <div
+      className="h-full bg-amber-500 rounded-full transition-all duration-500"
+      style={{
+        width: `${
+          answerSheetStats.total_answer_sheets > 0
+            ? (answerSheetStats.pending_evaluations /
+                answerSheetStats.total_answer_sheets) * 100
+            : 0
+        }%`
+      }}
+    ></div>
+  </div>
+</div>
 
               </div>
             </div>

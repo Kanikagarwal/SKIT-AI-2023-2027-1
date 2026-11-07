@@ -266,3 +266,40 @@ def get_evaluation_stats(
     return {
         "total_evaluations": total_evaluations
     }
+
+
+@router.get("/stats")
+def get_answer_sheet_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    answer_sheets = db.query(AnswerSheet).all()
+
+    # Debug: Print actual database statuses
+    for sheet in answer_sheets:
+        print(
+            "ID:", sheet.id,
+            "OCR Status:", sheet.ocr_status,
+            "Evaluation Status:", sheet.evaluation_status
+        )
+
+    total = db.query(AnswerSheet).count()
+
+    ocr_completed = db.query(AnswerSheet).filter(
+        AnswerSheet.ocr_status == "COMPLETED"
+    ).count()
+
+    evaluations_completed = db.query(AnswerSheet).filter(
+        AnswerSheet.evaluation_status == "COMPLETED"
+    ).count()
+
+    pending_evaluations = total - evaluations_completed
+
+    return {
+        "total_answer_sheets": total,
+        "ocr_completed": ocr_completed,
+        "evaluations_completed": evaluations_completed,
+        "pending_evaluations": pending_evaluations
+    }
