@@ -2,7 +2,6 @@
 from pathlib import Path
 import json
 import time
-import shutil
 
 import cv2
 import numpy as np
@@ -11,82 +10,17 @@ from paddleocr import TextDetection
 
 
 # ============================================================
-# CONFIGURATION
+# DEFAULT CONFIGURATION
 # ============================================================
 
-# Input: original-resolution preprocessed page images
-INPUT_DIR = Path("/content/evalai_input")
-
-# Temporary processing directory on Colab
-OUTPUT_DIR = Path("/content/evalai_dbnet_output")
-
-# Permanent output directory on Google Drive
-DRIVE_OUTPUT_DIR = Path(
-    "/content/drive/MyDrive/EvalAI/DBNet_Output"
-)
-
 BATCH_SIZE = 2
-
 CROP_PADDING = 3
-
 SAVE_VISUALIZATIONS = False
-
 RESUME = True
 
 
 # ============================================================
-# GPU CONFIGURATION
-# ============================================================
-
-if not paddle.is_compiled_with_cuda():
-    raise RuntimeError(
-        "GPU-enabled PaddlePaddle is not installed. "
-        "Check your PaddlePaddle installation."
-    )
-
-paddle.set_device("gpu")
-
-print("Paddle version:", paddle.__version__)
-print("Device:", paddle.device.get_device())
-
-
-# ============================================================
-# CREATE DIRECTORIES
-# ============================================================
-
-INPUT_DIR.mkdir(parents=True, exist_ok=True)
-OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-DRIVE_OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-
-
-# ============================================================
-# RESTORE PREVIOUS OUTPUTS FOR RESUMING
-# ============================================================
-
-if RESUME and any(DRIVE_OUTPUT_DIR.iterdir()):
-
-    print("Restoring previously completed outputs...")
-
-    shutil.copytree(
-        DRIVE_OUTPUT_DIR,
-        OUTPUT_DIR,
-        dirs_exist_ok=True
-    )
-
-
-# ============================================================
-# LOAD DBNET MODEL ONCE
-# ============================================================
-
-print("\nLoading DBNet text detection model...")
-
-detector = TextDetection(device="gpu")
-
-print("DBNet model loaded successfully.")
-
-
-# ============================================================
-# EXTRACT PADDLEOCR RESULT
+# LOAD PADDLEOCR RESULT
 # ============================================================
 
 def get_result_dict(prediction):
@@ -141,10 +75,7 @@ def extract_polygons(prediction):
 
 def order_points(points):
 
-    points = np.asarray(
-        points,
-        dtype=np.float32
-    )
+    points = np.asarray(points, dtype=np.float32)
 
     rect = np.zeros((4, 2), dtype=np.float32)
 
@@ -175,13 +106,8 @@ def sort_polygons(polygons, scores):
             dtype=np.float32
         )
 
-        center_y = float(
-            np.mean(polygon[:, 1])
-        )
-
-        center_x = float(
-            np.mean(polygon[:, 0])
-        )
+        center_y = float(np.mean(polygon[:, 1]))
+        center_x = float(np.mean(polygon[:, 0]))
 
         items.append(
             (center_y, center_x, polygon, score)
@@ -204,13 +130,12 @@ def sort_polygons(polygons, scores):
 # CROP DETECTED TEXT REGION
 # ============================================================
 
-def crop_polygon(image, polygon):
+def crop_polygon(image, polygon, crop_padding=CROP_PADDING):
 
     height, width = image.shape[:2]
 
     rect = order_points(polygon)
 
-    # Keep coordinates within original page boundaries.
     rect[:, 0] = np.clip(
         rect[:, 0],
         0,
@@ -265,14 +190,14 @@ def crop_polygon(image, polygon):
         borderMode=cv2.BORDER_REPLICATE
     )
 
-    if CROP_PADDING > 0:
+    if crop_padding > 0:
 
         crop = cv2.copyMakeBorder(
             crop,
-            CROP_PADDING,
-            CROP_PADDING,
-            CROP_PADDING,
-            CROP_PADDING,
+            crop_padding,
+            crop_padding,
+            crop_padding,
+            crop_padding,
             cv2.BORDER_CONSTANT,
             value=255
         )
@@ -324,11 +249,16 @@ def page_is_complete(page_output_dir):
 # PROCESS ONE PAGE
 # ============================================================
 
-def process_page(image_path, prediction):
+def process_page(
+    image_path,
+    prediction,
+    output_dir,
+    crop_padding=CROP_PADDING,
+    save_visualizations=SAVE_VISUALIZATIONS
+):
 
     start_time = time.time()
 
-    # Read original-resolution image.
     image = cv2.imread(
         str(image_path),
         cv2.IMREAD_GRAYSCALE
@@ -341,7 +271,7 @@ def process_page(image_path, prediction):
         )
 
     page_output_dir = (
-        OUTPUT_DIR /
+        output_dir /
         f"{image_path.stem}_dbnet_lines"
     )
 
@@ -350,13 +280,10 @@ def process_page(image_path, prediction):
         exist_ok=True
     )
 
-    # Remove stale crop files before reprocessing.
     for old_crop in page_output_dir.glob("line_*.png"):
         old_crop.unlink()
 
-    polygons, scores = extract_polygons(
-        prediction
-    )
+    polygons, scores = extract_polygons(prediction)
 
     sorted_items = sort_polygons(
         polygons,
@@ -367,7 +294,7 @@ def process_page(image_path, prediction):
 
     visualization = None
 
-    if SAVE_VISUALIZATIONS:
+    if save_visualizations:
 
         visualization = cv2.cvtColor(
             image,
@@ -380,7 +307,8 @@ def process_page(image_path, prediction):
 
         crop = crop_polygon(
             image,
-            polygon
+            polygon,
+            crop_padding
         )
 
         if crop is None:
@@ -388,12 +316,11 @@ def process_page(image_path, prediction):
 
         crop_index += 1
 
-        crop_name = (
-            f"line_{crop_index:04d}.png"
-        )
+        crop_name = f"line_{crop_index:04d}.png"
 
         crop_path = (
-            page_output_dir / crop_name
+            page_output_dir /
+            crop_name
         )
 
         success = cv2.imwrite(
@@ -436,7 +363,6 @@ def process_page(image_path, prediction):
                 2
             )
 
-    # Save page metadata.
     metadata = {
         "page_name": image_path.name,
         "image_width": int(image.shape[1]),
@@ -470,11 +396,10 @@ def process_page(image_path, prediction):
 
     temporary_json.replace(json_path)
 
-    # Save visualization only when enabled.
     if visualization is not None:
 
         visualization_path = (
-            OUTPUT_DIR /
+            output_dir /
             f"{image_path.stem}_dbnet_visualization.png"
         )
 
@@ -495,239 +420,366 @@ def process_page(image_path, prediction):
 
 
 # ============================================================
-# COPY COMPLETED PAGE TO DRIVE
+# MAIN DBNET FALLBACK FUNCTION
 # ============================================================
 
-def sync_page_to_drive(page_output_dir):
-
-    destination = (
-        DRIVE_OUTPUT_DIR /
-        page_output_dir.name
-    )
-
-    shutil.copytree(
-        page_output_dir,
-        destination,
-        dirs_exist_ok=True
-    )
-
-    if SAVE_VISUALIZATIONS:
-
-        page_name = (
-            page_output_dir.name.replace(
-                "_dbnet_lines",
-                ""
-            )
-        )
-
-        visualization_path = (
-            OUTPUT_DIR /
-            f"{page_name}_dbnet_visualization.png"
-        )
-
-        if visualization_path.exists():
-
-            shutil.copy2(
-                visualization_path,
-                DRIVE_OUTPUT_DIR /
-                visualization_path.name
-            )
-
-
-# ============================================================
-# GET INPUT PAGES
-# ============================================================
-
-page_paths = sorted(
-    INPUT_DIR.glob(
-        "page_*_preprocessed.png"
-    )
-)
-
-if not page_paths:
-
-    raise FileNotFoundError(
-        f"No page images found in {INPUT_DIR}"
-    )
-
-print("\nTotal pages:", len(page_paths))
-
-
-# ============================================================
-# SKIP COMPLETED PAGES
-# ============================================================
-
-pending_pages = []
-
-for image_path in page_paths:
-
-    page_output_dir = (
-        OUTPUT_DIR /
-        f"{image_path.stem}_dbnet_lines"
-    )
-
-    if RESUME and page_is_complete(page_output_dir):
-
-        print(
-            "Already completed:",
-            image_path.name
-        )
-
-    else:
-
-        pending_pages.append(image_path)
-
-
-print("Remaining pages:", len(pending_pages))
-
-
-# ============================================================
-# BATCH PROCESSING
-# ============================================================
-
-total_start = time.time()
-
-total_processed = 0
-total_crops = 0
-
-for batch_start in range(
-    0,
-    len(pending_pages),
-    BATCH_SIZE
+def run_dbnet_fallback(
+    input_dir,
+    output_dir,
+    empty_pages_json,
+    device="gpu",
+    batch_size=BATCH_SIZE,
+    crop_padding=CROP_PADDING,
+    save_visualizations=SAVE_VISUALIZATIONS,
+    resume=RESUME
 ):
 
-    batch_paths = pending_pages[
-        batch_start:
-        batch_start + BATCH_SIZE
-    ]
+    input_dir = Path(input_dir)
+    output_dir = Path(output_dir)
+    empty_pages_json = Path(empty_pages_json)
 
-    print("\n================================")
-    print("New batch")
+    # --------------------------------------------------------
+    # VALIDATE INPUT PATHS
+    # --------------------------------------------------------
 
-    for path in batch_paths:
-        print(path.name)
+    if not input_dir.exists():
 
-    batch_start_time = time.time()
-
-    # GPU batch inference.
-    try:
-
-        predictions = list(
-            detector.predict(
-                [
-                    str(path)
-                    for path in batch_paths
-                ],
-                batch_size=len(batch_paths)
-            )
+        raise FileNotFoundError(
+            f"Input directory not found: {input_dir}"
         )
 
-        if len(predictions) != len(batch_paths):
+    if not empty_pages_json.exists():
+
+        raise FileNotFoundError(
+            f"Empty pages file not found: {empty_pages_json}"
+        )
+
+    if batch_size < 1:
+
+        raise ValueError(
+            "batch_size must be at least 1."
+        )
+
+    output_dir.mkdir(
+        parents=True,
+        exist_ok=True
+    )
+
+    # --------------------------------------------------------
+    # GPU / CPU CONFIGURATION
+    # --------------------------------------------------------
+
+    if device == "gpu":
+
+        if not paddle.is_compiled_with_cuda():
 
             raise RuntimeError(
-                "Prediction count does not match batch size."
+                "GPU-enabled PaddlePaddle is not installed. "
+                "Install a compatible GPU version or use device='cpu'."
             )
 
-    except Exception as batch_error:
+    elif device != "cpu":
 
-        print(
-            "Batch inference failed:",
-            str(batch_error)
+        raise ValueError(
+            "device must be either 'gpu' or 'cpu'."
         )
 
-        print("Retrying pages individually...")
+    paddle.set_device(device)
 
-        predictions = []
+    print("Paddle version:", paddle.__version__)
+    print("Device:", paddle.device.get_device())
+
+    # --------------------------------------------------------
+    # LOAD EMPTY PAGES
+    # --------------------------------------------------------
+
+    with open(
+        empty_pages_json,
+        "r",
+        encoding="utf-8"
+    ) as f:
+
+        empty_pages = json.load(f)
+
+    if not isinstance(empty_pages, list):
+
+        raise ValueError(
+            "empty_pages.json must contain a JSON list."
+        )
+
+    if not empty_pages:
+
+        print(
+            "No empty pages found. "
+            "DBNet fallback is not required."
+        )
+
+        return {
+            "status": "skipped",
+            "fallback_pages": 0,
+            "pages_processed": 0,
+            "total_crops": 0,
+            "output_dir": str(output_dir)
+        }
+
+    page_paths = []
+
+    for item in empty_pages:
+
+        if item.get("status", "empty") != "empty":
+            continue
+
+        page_name = item.get("page_name")
+
+        if not page_name:
+
+            raise ValueError(
+                "An empty page entry is missing page_name."
+            )
+
+        image_path = input_dir / page_name
+
+        if not image_path.exists():
+
+            raise FileNotFoundError(
+                f"Input page not found: {image_path}"
+            )
+
+        page_paths.append(image_path)
+
+    if not page_paths:
+
+        print("No eligible empty pages found.")
+
+        return {
+            "status": "skipped",
+            "fallback_pages": 0,
+            "pages_processed": 0,
+            "total_crops": 0,
+            "output_dir": str(output_dir)
+        }
+
+    print("\n========== DBNET INPUT ==========")
+    print("Pages requiring fallback:", len(page_paths))
+
+    for path in page_paths:
+        print(path.name)
+
+    print("=================================")
+
+    # --------------------------------------------------------
+    # LOAD DBNET MODEL ONCE
+    # --------------------------------------------------------
+
+    print("\nLoading DBNet text detection model...")
+
+    detector = TextDetection(device=device)
+
+    print("DBNet model loaded successfully.")
+
+    # --------------------------------------------------------
+    # SKIP COMPLETED PAGES
+    # --------------------------------------------------------
+
+    pending_pages = []
+
+    for image_path in page_paths:
+
+        page_output_dir = (
+            output_dir /
+            f"{image_path.stem}_dbnet_lines"
+        )
+
+        if resume and page_is_complete(page_output_dir):
+
+            print(
+                "Already completed:",
+                image_path.name
+            )
+
+        else:
+
+            pending_pages.append(image_path)
+
+    # --------------------------------------------------------
+    # BATCH PROCESSING
+    # --------------------------------------------------------
+
+    total_start = time.time()
+
+    total_processed = 0
+    total_crops = 0
+
+    for batch_start in range(
+        0,
+        len(pending_pages),
+        batch_size
+    ):
+
+        batch_paths = pending_pages[
+            batch_start:
+            batch_start + batch_size
+        ]
+
+        print("\n================================")
+        print("New batch")
 
         for path in batch_paths:
+            print(path.name)
 
-            single_prediction = list(
+        batch_start_time = time.time()
+
+        try:
+
+            predictions = list(
                 detector.predict(
-                    str(path),
-                    batch_size=1
+                    [
+                        str(path)
+                        for path in batch_paths
+                    ],
+                    batch_size=len(batch_paths)
                 )
             )
 
-            if len(single_prediction) != 1:
+            if len(predictions) != len(batch_paths):
 
                 raise RuntimeError(
-                    f"Unexpected prediction result for {path}"
+                    "Prediction count does not match batch size."
                 )
 
-            predictions.append(
-                single_prediction[0]
+        except Exception as batch_error:
+
+            print(
+                "Batch inference failed:",
+                str(batch_error)
             )
 
-    inference_time = (
-        time.time() - batch_start_time
+            print("Retrying pages individually...")
+
+            predictions = []
+
+            for path in batch_paths:
+
+                single_prediction = list(
+                    detector.predict(
+                        str(path),
+                        batch_size=1
+                    )
+                )
+
+                if len(single_prediction) != 1:
+
+                    raise RuntimeError(
+                        f"Unexpected prediction result for {path}"
+                    )
+
+                predictions.append(
+                    single_prediction[0]
+                )
+
+        inference_time = (
+            time.time() - batch_start_time
+        )
+
+        print(
+            "Inference time:",
+            round(inference_time, 2),
+            "seconds"
+        )
+
+        for image_path, prediction in zip(
+            batch_paths,
+            predictions
+        ):
+
+            output_folder, crop_count = process_page(
+                image_path,
+                prediction,
+                output_dir,
+                crop_padding,
+                save_visualizations
+            )
+
+            total_processed += 1
+            total_crops += crop_count
+
+        print(
+            f"Completed: {total_processed}/"
+            f"{len(pending_pages)}"
+        )
+
+    # --------------------------------------------------------
+    # FINAL SUMMARY
+    # --------------------------------------------------------
+
+    total_time = time.time() - total_start
+
+    print("\n========== DBNET SUMMARY ==========")
+
+    print("Fallback pages:", len(page_paths))
+    print("Pages processed:", total_processed)
+    print("Total crops:", total_crops)
+
+    print(
+        "Average crops per page:",
+        round(
+            total_crops / max(total_processed, 1),
+            2
+        )
     )
 
     print(
-        "Inference time:",
-        round(inference_time, 2),
+        "Total time:",
+        round(total_time / 60, 2),
+        "minutes"
+    )
+
+    print(
+        "Average time per page:",
+        round(
+            total_time / max(total_processed, 1),
+            2
+        ),
         "seconds"
     )
 
-    # Crop and save every page.
-    for image_path, prediction in zip(
-        batch_paths,
-        predictions
-    ):
+    print("DBNet output:", output_dir)
+    print("===================================")
 
-        output_folder, crop_count = process_page(
-            image_path,
-            prediction
-        )
-
-        # Persist output after each page.
-        sync_page_to_drive(output_folder)
-
-        total_processed += 1
-        total_crops += crop_count
-
-    print(
-        f"Completed: {total_processed}/"
-        f"{len(pending_pages)}"
-    )
+    return {
+        "status": "completed",
+        "fallback_pages": len(page_paths),
+        "pages_processed": total_processed,
+        "total_crops": total_crops,
+        "output_dir": str(output_dir),
+        "total_time_seconds": round(total_time, 2)
+    }
 
 
 # ============================================================
-# FINAL SUMMARY
+# OPTIONAL STANDALONE KAGGLE EXECUTION
 # ============================================================
 
-total_time = time.time() - total_start
+if __name__ == "__main__":
 
-print("\n========== DBNET SUMMARY ==========")
-
-print("Pages processed:", total_processed)
-print("Total crops:", total_crops)
-
-print(
-    "Average crops per page:",
-    round(
-        total_crops / max(total_processed, 1),
-        2
+    INPUT_DIR = Path(
+        "/kaggle/input/datasets/diyavee/english-processed-zip/ENGLISH_processed"
     )
-)
 
-print(
-    "Total time:",
-    round(total_time / 60, 2),
-    "minutes"
-)
+    EMPTY_PAGES_JSON = Path(
+        "/kaggle/working/outputs/full_page_ocr/empty_pages.json"
+    )
 
-print(
-    "Average time per page:",
-    round(
-        total_time / max(total_processed, 1),
-        2
-    ),
-    "seconds"
-)
+    OUTPUT_DIR = Path(
+        "/kaggle/working/DBNet_Output"
+    )
 
-print(
-    "Permanent output:",
-    DRIVE_OUTPUT_DIR
-)
+    result = run_dbnet_fallback(
+        input_dir=INPUT_DIR,
+        output_dir=OUTPUT_DIR,
+        empty_pages_json=EMPTY_PAGES_JSON,
+        device="gpu"
+    )
 
-print("===================================")
+    print("\nReturned result:")
+    print(json.dumps(result, indent=2))
