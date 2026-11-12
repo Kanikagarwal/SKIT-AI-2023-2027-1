@@ -41,3 +41,17 @@ def create_new_user(
         )
 
     return user
+
+
+@router.get(
+    "/",
+    response_model=list[UserResponse]
+)
+def get_all_users(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    users = db.query(User).all()
+    return users
