@@ -1,5 +1,6 @@
 
-const API_BASE_URL = "http://127.0.0.1:8000";
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
 
 export const getAllUsers = async () => {
   const token = localStorage.getItem("evalai_token");
@@ -22,4 +23,87 @@ export const getAllUsers = async () => {
   }
 
   return response.json();
+};
+
+
+export const getEvaluationStats = async () => {
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Admin token not found. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/answer-sheets/evaluation-stats`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "Failed to fetch evaluation statistics");
+  }
+
+  return data;
+};
+
+
+export const getAnswerSheetStats = async () => {
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Admin token not found. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/answer-sheets/stats`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "Failed to fetch answer sheet statistics");
+  }
+
+  return data;
+};
+
+export const getRecentActivity = async () => {
+  const token = localStorage.getItem("evalai_token");
+
+  if (!token) {
+    throw new Error("Admin token not found. Please log in again.");
+  }
+
+  const response = await fetch(
+    `${API_BASE_URL}/api/answer-sheets/recent-activity`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.detail || "Failed to fetch recent activity");
+  }
+
+  return data;
 };

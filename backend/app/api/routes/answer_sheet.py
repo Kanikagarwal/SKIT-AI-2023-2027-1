@@ -252,3 +252,80 @@ def save_evaluation_result(
             for item in saved_evaluations
         ]
     }
+
+
+@router.get("/evaluation-stats")
+def get_evaluation_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    total_evaluations = db.query(Evaluation).count()
+
+    return {
+        "total_evaluations": total_evaluations
+    }
+
+
+@router.get("/stats")
+def get_answer_sheet_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    answer_sheets = db.query(AnswerSheet).all()
+
+    # Debug: Print actual database statuses
+    for sheet in answer_sheets:
+        print(
+            "ID:", sheet.id,
+            "OCR Status:", sheet.ocr_status,
+            "Evaluation Status:", sheet.evaluation_status
+        )
+
+    total = db.query(AnswerSheet).count()
+
+    ocr_completed = db.query(AnswerSheet).filter(
+        AnswerSheet.ocr_status == "COMPLETED"
+    ).count()
+
+    evaluations_completed = db.query(AnswerSheet).filter(
+        AnswerSheet.evaluation_status == "COMPLETED"
+    ).count()
+
+    pending_evaluations = total - evaluations_completed
+
+    return {
+        "total_answer_sheets": total,
+        "ocr_completed": ocr_completed,
+        "evaluations_completed": evaluations_completed,
+        "pending_evaluations": pending_evaluations
+    }
+
+
+@router.get("/recent-activity")
+def get_recent_activity(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(
+        require_role(UserRole.ADMIN)
+    )
+):
+    answer_sheets = (
+        db.query(AnswerSheet)
+        .order_by(AnswerSheet.created_at.desc())
+        .limit(5)
+        .all()
+    )
+
+    return [
+        {
+            "id": sheet.id,
+            "file_name": sheet.file_name,
+            "ocr_status": sheet.ocr_status,
+            "evaluation_status": sheet.evaluation_status,
+            "created_at": sheet.created_at
+        }
+        for sheet in answer_sheets
+    ]
