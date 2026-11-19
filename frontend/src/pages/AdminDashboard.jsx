@@ -299,14 +299,14 @@ function AdminDashboard() {
               <div className="space-y-2">
 
                 <Link
-                  to="/students"
+                  to="/"
                   className="block w-full border border-[#C9D9ED] rounded-lg px-3 py-2.5 text-xs font-semibold text-[#294667] hover:bg-[#E5EFFC] transition"
                 >
                   Manage Users
                 </Link>
 
                 <Link
-                  to="/evaluations"
+                  to="/"
                   className="block w-full border border-[#C9D9ED] rounded-lg px-3 py-2.5 text-xs font-semibold text-[#294667] hover:bg-[#E5EFFC] transition"
                 >
                   View Evaluations
